@@ -31,7 +31,6 @@
                  [ring-middleware-format "0.6.0"]
 
                  ;; Web app
-                 [cljsjs/react-bootstrap "0.27.3-0"]
                  [com.cognitect/transit-cljs "0.8.232"]
                  [org.omcljs/om "1.0.0-alpha24"]])
 

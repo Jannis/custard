@@ -1,0 +1,98 @@
+@black: #222;
+@white: #fff;
+
+@teal-50: #E0F2F1;
+@teal-100: #B2DFDB;
+@teal-200: #80CBC4;
+@teal-300: #4DB6AC;
+@teal-400: #26A69A;
+@teal-500: #009688;
+@teal-600: #00897B;
+@teal-700: #00796B;
+@teal-800: #00695C;
+@teal-900: #004D40;
+@teal-a100: #A7FFEB;
+@teal-a200: #64FFDA;
+@teal-a400: #1DE9B6;
+@teal-a700: #00BFA5;
+
+@default-bg: @teal-50;
+@default-fg: @black;
+
+@header-bg: @teal-900;
+@header-fg: @white;
+@header-light-bg: @teal-800;
+@header-light-fg: @white;
+
+@border-radius: 0.5rem;
+
+body {
+  font-family: 'Fira Sans';
+  padding: 0;
+  margin: 0;
+  background: @default-bg;
+  color: @default-fg;
+}
+
+.header {
+  width: 100%;
+
+  .header-title {
+    background: @header-bg;
+    color: @header-fg;
+
+    display: table;
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .header-title-text {
+    display: table-cell;
+    vertical-align: middle;
+    font-size: 150%;
+    margin: 0;
+  }
+
+  .header-title-nav {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+
+    select {
+      background: @header-light-bg;
+      color: @header-light-fg;
+      border: darken(@header-light-bg, 10%);
+      border-radius: @border-radius;
+      outline: none;
+      padding: 0.5rem;
+    }
+  }
+
+  .header-nav {
+    text-align: center;
+    margin: auto;
+    background: @header-light-bg;
+    color: @header-light-fg;
+
+    a, span {
+      color: inherit;
+      padding: 1rem;
+      display: inline-block;
+    }
+
+    a {
+      text-decoration: none;
+      box-shadow: inset 0px 0px 0px 0px @default-bg;
+      transition: box-shadow 0.1s ease-in;
+      cursor: pointer;
+
+      &:hover {
+        box-shadow: inset 0px -3px 0px 0px @default-bg;
+      }
+    }
+
+    .header-nav-separator:before {
+      content: '/';
+    }
+  }
+}
