@@ -73,6 +73,7 @@ body {
     margin: auto;
     background: @header-light-bg;
     color: @header-light-fg;
+    padding-top: 0.25rem;
 
     a, span {
       color: inherit;
@@ -80,19 +81,29 @@ body {
       display: inline-block;
     }
 
-    a {
+    .header-nav-item {
       text-decoration: none;
-      box-shadow: inset 0px 0px 0px 0px @default-bg;
-      transition: box-shadow 0.1s ease-in;
+      transition: all 0.15s ease-in;
       cursor: pointer;
+      background: inherit;
+      border-radius: @border-radius @border-radius 0 0;
 
       &:hover {
         box-shadow: inset 0px -3px 0px 0px @default-bg;
       }
+
+      &.header-nav-item-active {
+        color: @default-fg;
+        background: @default-bg;
+      }
     }
 
-    .header-nav-separator:before {
-      content: '/';
+    .header-nav-separator {
+      margin-left: 2rem;
     }
   }
+}
+
+main {
+  padding: 2rem;
 }
