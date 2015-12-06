@@ -7,6 +7,7 @@
                  [adzerk/boot-cljs "1.7.170-1"]
                  [adzerk/boot-cljs-repl "0.3.0"]
                  [adzerk/boot-reload "0.4.1"]
+                 [danielsz/boot-environ "0.0.5"]
                  [deraen/boot-less "0.4.2"]
 
                  ;; REPL
@@ -41,13 +42,16 @@
 (require '[adzerk.boot-cljs :refer [cljs]]
          '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
          '[adzerk.boot-reload :refer [reload]]
+         '[danielsz.boot-environ :refer [environ]]
          '[deraen.boot-less :refer [less]]
          '[reloaded.repl :refer [init start stop go reset]]
          '[system.boot :refer [run system]]
          '[server.systems :refer [development-system]])
 
-(deftask run-development []
-  (comp (watch)
+(deftask run-development
+  [p path PATH str "Path to a CUSTARD Git repository"]
+  (comp (environ :env {:custard-path path})
+        (watch)
         (system :sys #'development-system
                 :auto-start true
                 :hot-reload true
