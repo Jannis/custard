@@ -1,7 +1,10 @@
 (ns web.reconciler
   (:import [goog.net XhrIo])
-  (:require [cognitect.transit :as transit]
-            [om.next :as om]))
+  (:require [cljs.core.async :refer [<! timeout]]
+            [cognitect.transit :as transit]
+            [om.next :as om]
+            [om.next.protocols :as om-protocols])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defmulti read om/dispatch)
 
@@ -90,7 +93,7 @@
          #js {"Content-Type" "application/transit+json"}))
 
 (defn send-to-remotes [remotes sends merge-fn]
-  (println ">> send" remotes "sends" sends)
+  (println ">>" sends)
   (doseq [[remote query] sends]
     (transit-post (get-in remotes [remote :url])
                   query
@@ -106,3 +109,16 @@
                   :send #(send-to-remotes remotes %1 %2)
                   :remotes (keys remotes)
                   :id-key :id}))
+
+(defn start-polling [root]
+  (go
+    (loop []
+      (<! (timeout 2000))
+      (let [query (om/get-query root)
+            cfg (:config reconciler)
+            remotes (:remotes cfg)
+            sends (om/gather-sends cfg query remotes)]
+        (when-not (empty? sends)
+          (om-protocols/queue-sends! reconciler sends)
+          (om/schedule-sends! reconciler)))
+      (recur))))

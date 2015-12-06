@@ -2,7 +2,7 @@
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [web.reconciler :refer [reconciler]]
+            [web.reconciler :refer [reconciler start-polling]]
             [web.components.components :refer [Component components]]
             [web.components.header :refer [header]]
             [web.components.requirements :refer [Requirement
@@ -64,4 +64,5 @@
 
 (defn run []
   (enable-console-print!)
-  (om/add-root! reconciler App (gdom/getElement "app")))
+  (om/add-root! reconciler App (gdom/getElement "app"))
+  (start-polling App))
