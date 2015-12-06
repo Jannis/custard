@@ -10,13 +10,13 @@
   [{:keys [custard]} _ _]
   {:value (into []
                 (map #(select-keys % [:id :title :type]))
-                (c/states custard))})
+                (.states custard))})
 
 (defmethod readf :requirements
   [{:keys [custard]} _ {:keys [state]}]
   {:value (or (some->> state
                        second
-                       (c/state custard)
+                       (.state custard)
                        c/requirements)
               [])})
 
@@ -24,7 +24,7 @@
   [{:keys [custard]} _ {:keys [state]}]
   {:value (or (some->> state
                        second
-                       (c/state custard)
+                       (.state custard)
                        c/components)
               [])})
 
@@ -32,7 +32,7 @@
   [{:keys [custard]} _ {:keys [state]}]
   {:value (or (some->> state
                        second
-                       (c/state custard)
+                       (.state custard)
                        c/tags)
               [])})
 
@@ -40,7 +40,7 @@
   [{:keys [custard]} _ {:keys [state]}]
   {:value (or (some->> state
                        second
-                       (c/state custard)
+                       (.state custard)
                        c/work-items)
               [])})
 

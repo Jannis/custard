@@ -1,5 +1,8 @@
 (ns custard.core
-  (:require [com.stuartsierra.component :as component]))
+  (:require [clojure.java.io :as io]
+            [com.stuartsierra.component :as component]
+            [juxt.dirwatch :refer [watch-dir close-watcher]]
+            [custard.parser :refer [parse-uncommitted]]))
 
 ;;;; Protocols
 
@@ -15,22 +18,22 @@
 
 ;;;; Uncommitted state
 
-(defrecord UncommittedState [id title path graph]
+(defrecord UncommittedState [id title type graph]
   IState
   (requirements [this])
   (components [this])
   (work-items [this])
   (tags [this]))
 
-(defn uncommitted-state [path]
-  (UncommittedState. "UNCOMMITTED" "UNCOMMITTED" path []))
+(defn uncommitted-state [graph]
+  (UncommittedState. "UNCOMMITTED" "UNCOMMITTED" :none graph))
 
 ;;;; Default Custard implementation
 
-(defrecord Custard [path repo]
+(defrecord Custard [dir repo watcher uncommitted]
   ICustard
   (states [this]
-    (into [(uncommitted-state path)]
+    (into [(uncommitted-state @uncommitted)]
           []))
 
   (state [this id]
@@ -38,10 +41,18 @@
 
   component/Lifecycle
   (start [this]
-    this)
+    (reset! uncommitted (parse-uncommitted dir))
+    (assoc this :watcher
+           (watch-dir (fn [_]
+                        (reset! uncommitted (parse-uncommitted dir)))
+                      dir)))
 
   (stop [this]
-    this))
+    (close-watcher watcher)
+    (dissoc this :watcher)))
 
 (defn new-custard [path]
-  (Custard. path nil))
+  (map->Custard {:dir (io/as-file path)
+                 :repo nil
+                 :watcher nil
+                 :uncommitted (atom [])}))

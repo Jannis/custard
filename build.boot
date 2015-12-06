@@ -21,6 +21,7 @@
 
                  ;; CUSTARD
                  [com.stuartsierra/component "0.3.1"]
+                 [juxt/dirwatch "0.2.2"]
 
                  ;; Server
                  [com.cognitect/transit-clj "0.8.285"]
