@@ -52,12 +52,12 @@
 
 (deftask run-development
   [p path PATH str "Path to a CUSTARD Git repository"]
-  (comp (environ :env {:custard-path path})
-        (watch)
+  (comp (watch)
+        (environ :env {:custard-path path})
         (system :sys #'development-system
                 :auto-start true
                 :hot-reload true
-                :files ["handler.clj"])
+                :files ["core.clj" "handler.clj" "parser.clj"])
         (reload :on-jsload 'web.app/run)
         (cljs-repl)
         (less)
