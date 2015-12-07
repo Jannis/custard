@@ -39,7 +39,7 @@
 
   (render [this]
     (dom/div #js {:className "app"}
-      (let [props (select-keys (om/props this) [:states :view])]
+      (let [props (select-keys (om/props this) [:states :view :project])]
         (header
           (om/computed props
                        {:select-state-fn #(.select-state this %)
