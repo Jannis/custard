@@ -107,8 +107,11 @@
           (build-node [graph node]
             (let [ident (node->ident node)
                   children (:children node)
+                  parent (if (nil? (:parent node))
+                           nil
+                           {:name (:parent node)})
                   linked-data (-> node
-                                  (dissc :parent)
+                                  (assoc :parent parent)
                                   (update :children #(mapv node->link %))
                                   keywordize-keys)]
               (-> graph
