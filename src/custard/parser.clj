@@ -32,6 +32,25 @@
 
 ;;;; Node tree
 
+(defn normalize-kind [node]
+  (letfn [(normalize [kind]
+            (let [aliases {"project" ["project"]
+                           "requirement" ["requirement" "req" "r"]
+                           "component" ["component" "comp" "c"]
+                           "work-item" ["work-item" "work" "w"]
+                           "tag" ["tag" "t"]}
+                  res (or (->> aliases
+                               (filter #(some #{kind} (second %)))
+                               ffirst)
+                          kind)]
+              res))]
+    (-> (if (contains? node "kind")
+          (update node "kind" normalize)
+          node)
+        (update :children (fn [children]
+                            (mapv #(normalize-kind %)
+                                  children))))))
+
 (defn inject-name [node parent-segments]
   (let [segments (if (nil? (:name node))
                    parent-segments
@@ -67,6 +86,7 @@
                     (build-node name-segment data)))]
     (let [tree (reduce build-step root data)]
       (-> tree
+          (normalize-kind)
           (inject-name [])
           (inject-parent nil)))))
 
