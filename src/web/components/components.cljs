@@ -16,6 +16,21 @@
 
 (def parent* (om/factory Parent))
 
+(defui MapTarget
+  static om/Ident
+  (ident [this props]
+    [:node (:name props)])
+  static om/IQuery
+  (query [this]
+    [:name :title :kind])
+  Object
+  (render [this]
+    (let [{:keys [name title kind]} (om/props this)]
+      (dom/div #js {:className "node-map-target"}
+               title))))
+
+(def map-target (om/factory MapTarget {:key-fn :name}))
+
 (declare component)
 
 (defui Component
@@ -26,19 +41,24 @@
   (query [this]
     [:name :title :description
      {:parent (om/get-query Parent)}
-     {:children '...}])
+     {:children '...}
+     {:mapped-to (om/get-query MapTarget)}])
   Object
   (toggle-expanded [this]
     (om/update-state! this update :expanded not))
 
   (render [this]
-    (let [{:keys [name title description children]} (om/props this)
+    (let [{:keys [name title description children
+                  mapped-to]} (om/props this)
           {:keys [parent]} (om/get-computed this)
           {:keys [expanded]} (om/get-state this)]
       (dom/div #js {:className
                     (str "node"
                          (when-not parent
-                           " node-root"))}
+                           " node-root")
+                         (if-not (empty? mapped-to)
+                           " node-satisfied"
+                           " node-unsatisfied"))}
         (dom/h2 #js {:className "node-header"
                      :onClick #(.toggle-expanded this)}
           (dom/span #js {:className "node-header-title"} title)
@@ -60,7 +80,16 @@
                 (dom/div #js {:className "node-detail-label"}
                   "Parent")
                 (dom/div #js {:className "node-detail-content"}
-                  (parent* parent))))))
+                  (parent* parent))))
+            (dom/div #js {:className "node-detail"}
+              (dom/div #js {:className "node-detail-label"}
+                "Mapped to")
+              (dom/div #js {:className "node-detail-content"}
+                (if (empty? mapped-to)
+                  (dom/div #js {:className "error"}
+                    "Not mapped to any work items yet.")
+                  (for [target mapped-to]
+                    (map-target target)))))))
         (dom/div #js {:className "node-subnodes"}
           (for [child children]
             (component
