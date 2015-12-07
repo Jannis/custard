@@ -63,15 +63,8 @@
   (om/parser {:read read :mutate mutate}))
 
 (def initial-state
-  {:states [{:id "UNCOMMITTED" :name "UNCOMMITTED" :type :none}
-            {:id "HEAD" :name "HEAD" :type :branch}
-            {:id "master" :name "master" :type :branch}]
-   :requirements [{:id "r/foo"
-                   :title "Foo"
-                   :description "Description of Foo"}
-                  {:id "r/bar"
-                   :title "Bar"
-                   :description "Description of Bar"}]})
+  {:states [{:id "UNCOMMITTED" :name "UNCOMMITTED" :type :none}]
+   :requirements []})
 
 (defn merge-result-tree [a b]
   (letfn [(merge-tree [a b]
