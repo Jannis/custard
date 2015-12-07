@@ -12,6 +12,14 @@
                 (map #(select-keys % [:id :title :type]))
                 (.states custard))})
 
+(defmethod readf :project
+  [{:keys [custard]} _ {:keys [state]}]
+  {:value (or (some->> state
+                       second
+                       (.state custard)
+                       c/project)
+              nil)})
+
 (defmethod readf :requirements
   [{:keys [custard]} _ {:keys [state]}]
   {:value (or (some->> state

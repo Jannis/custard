@@ -1,12 +1,13 @@
 (ns custard.core
-  (:require [clojure.java.io :as io]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [juxt.dirwatch :refer [watch-dir close-watcher]]
+            [me.raynes.fs :as fs]
             [custard.parser :refer [parse-uncommitted]]))
 
 ;;;; Protocols
 
 (defprotocol IState
+  (project [this])
   (requirements [this])
   (components [this])
   (work-items [this])
@@ -20,10 +21,25 @@
 
 (defrecord UncommittedState [id title type graph]
   IState
-  (requirements [this])
-  (components [this])
-  (work-items [this])
-  (tags [this]))
+  (project [this]
+    (first (into []
+                 (comp (map #(get-in graph %))
+                       (filter #(= "project" (:kind %))))
+                 (:nodes graph))))
+  (requirements [this]
+    (into []
+          (comp (map #(get-in graph %))
+                (filter #(= "requirement" (:kind %))))
+          (:nodes graph)))
+  (components [this]
+    (into []
+          (comp (map #(get-in graph %))
+                (filter #(= "component" (:kind %))))
+          (:nodes graph)))
+  (work-items [this]
+    (mapv #(get-in graph %) (:work-items graph)))
+  (tags [this]
+    (mapv #(get-in graph %) (:tags graph))))
 
 (defn uncommitted-state [graph]
   (UncommittedState. "UNCOMMITTED" "UNCOMMITTED" :none graph))
@@ -48,11 +64,13 @@
                       dir)))
 
   (stop [this]
-    (close-watcher watcher)
+    (when watcher
+      (close-watcher watcher))
     (dissoc this :watcher)))
 
 (defn new-custard [path]
-  (map->Custard {:dir (io/as-file path)
+  {:pre [(fs/directory? (fs/file path))]}
+  (map->Custard {:dir (fs/file path)
                  :repo nil
                  :watcher nil
                  :uncommitted (atom [])}))
