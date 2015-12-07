@@ -53,6 +53,7 @@ body {
     font-size: 1.5rem;
     font-weight: normal;
     margin: 0;
+    cursor: pointer;
   }
 
   .header-title-nav {
@@ -108,5 +109,115 @@ body {
 }
 
 main {
-  padding: 2rem;
+  margin: 2rem 2rem 2rem 2rem;
+}
+
+.node {
+  .node-header {
+    margin: 0rem 0rem 0.5rem 0rem;
+    box-sizing: border-box;
+    display: table;
+    width: 100%;
+    color: @default-fg;
+    font-size: 1.0rem;
+    font-weight: normal;
+    cursor: pointer;
+    line-height: 1.25rem;
+
+    &:before {
+      transition: all 0.05s ease-in-out;
+      position: absolute;
+      content: '.';
+      width: 0rem;
+      height: 0rem;
+      left: 0;
+      color: rgba(0, 0, 0, 0.0);
+      border: 0;
+    }
+
+    &:hover:before {
+      border-top: 0.625em solid transparent;
+      border-bottom: 0.625em solid transparent;
+      border-left: 0.625em solid @teal-100;
+    }
+
+    .node-header-title {
+      display: table-cell;
+    }
+
+    .node-header-name {
+      display: table-cell;
+      text-align: right;
+      opacity: 0.5;
+    }
+  }
+
+  &.node-root {
+    > .node-header {
+      margin: 2rem 0rem 0.5rem 0rem;
+      font-size: 1.45rem;
+      color: lighten(@default-fg, 33%);
+    }
+
+    > .node-subnodes {
+      padding-left: 0rem;
+      margin-top: 1rem;
+    }
+  }
+
+  .node-details {
+    overflow-y: hidden;
+    transition: all 0.25s ease-in-out;
+
+    &.node-details-collapsed {
+      max-height: 0px;
+    }
+
+    &.node-details-expanded {
+      max-height: 500px;
+    }
+  }
+
+  .node-details-table {
+    display: table;
+    box-sizing: border-box;
+    table-layout: fixed;
+    width: 100%;
+    border-spacing: 1rem;
+    border: thin solid darken(@default-bg, 10%);
+    background: darken(@default-bg, 5%);
+    margin-bottom: 0.5rem;
+
+    .node-detail {
+      display: table-row;
+
+      .node-detail-label {
+        font-family: 'Fira Sans';
+        display: table-cell;
+        width: 6rem;
+      }
+
+      .node-detail-content {
+        font-family: 'Fira Sans Light';
+        display: table-cell;
+      }
+    }
+  }
+
+  .node-subnodes {
+    padding-left: 2rem;
+  }
+}
+
+.project-description {
+  margin-top: 2rem;
+}
+
+.project-copyright {
+  margin-top: 2rem;
+
+  .project-copyright-header {
+    font-weight: normal;
+    color: lighten(@default-fg, 33%);
+  }
 }
