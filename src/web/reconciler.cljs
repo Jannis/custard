@@ -18,13 +18,19 @@
     {:value (om/db->tree query (get st key) st)
      :remote true}))
 
-(defmethod read :components
+(defmethod read :project
   [{:keys [state query]} key params]
   (let [st @state]
     {:value (om/db->tree query (get st key) st)
      :remote true}))
 
 (defmethod read :requirements
+  [{:keys [state query]} key params]
+  (let [st @state]
+    {:value (om/db->tree query (get st key) st)
+     :remote true}))
+
+(defmethod read :components
   [{:keys [state query]} key params]
   (let [st @state]
     {:value (om/db->tree query (get st key) st)
@@ -46,7 +52,7 @@
 
 (defmethod read :view
   [{:keys [state]} key _]
-  {:value (or (get @state key) :requirements)})
+  {:value (or (get @state key) :project)})
 
 (defmethod mutate 'app/set-view
   [{:keys [state]} _ {:keys [view]}]

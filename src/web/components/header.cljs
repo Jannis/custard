@@ -26,7 +26,10 @@
                   select-view-fn]} (om/get-computed this)]
       (dom/header #js {:className "header"}
         (dom/div #js {:className "header-title"}
-          (dom/h1 #js {:className "header-title-text"} "CUSTARD")
+          (dom/h1 #js {:className "header-title-text"
+                       :onClick #(when select-view-fn
+                                   (select-view-fn :project))}
+            "CUSTARD")
           (dom/nav #js {:className "header-title-nav"}
             (state-chooser {:state state
                             :states states

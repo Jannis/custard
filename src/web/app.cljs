@@ -5,6 +5,7 @@
             [web.reconciler :refer [reconciler start-polling]]
             [web.components.components :refer [Component components]]
             [web.components.header :refer [header]]
+            [web.components.project :refer [Project project]]
             [web.components.requirements :refer [Requirement
                                                  requirements]]
             [web.components.state-chooser :refer [StateChooserItem]]
@@ -21,6 +22,7 @@
   (query [this]
     `[;; CUSTARD data
       {:states ~(om/get-query StateChooserItem)}
+      ({:project ~(om/get-query Project)} {:state ?state})
       ({:requirements ~(om/get-query Requirement)} {:state ?state})
       ({:components ~(om/get-query Component)} {:state ?state})
       ({:work-items ~(om/get-query WorkItem)} {:state ?state})
@@ -44,6 +46,13 @@
                         :select-view-fn #(.select-view this %)})))
       (dom/main nil
         (condp = (:view (om/props this))
+          :project
+          (let [project' (:project (om/props this))]
+            (if (and (not (nil? project'))
+                     (not (empty? project')))
+              (project project')
+              (dom/div nil "Start by defining a project.")))
+
           :requirements
           (let [items (select-keys (om/props this) [:requirements])]
             (requirements items))
