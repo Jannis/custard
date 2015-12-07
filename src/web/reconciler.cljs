@@ -74,7 +74,6 @@
     (merge-tree a b)))
 
 (defn merge-remote [results merge-fn]
-  (println "<<" results)
   (merge-fn results))
 
 (def remotes
@@ -92,7 +91,6 @@
          #js {"Content-Type" "application/transit+json"}))
 
 (defn send-to-remotes [remotes sends merge-fn]
-  (println ">>" sends)
   (doseq [[remote query] sends]
     (transit-post (get-in remotes [remote :url])
                   query
