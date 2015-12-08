@@ -8,7 +8,10 @@
             [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
             [om.next.server :as om]
-            [ring.util.response :refer [content-type header response]]
+            [ring.util.response :refer [content-type
+                                        header
+                                        response
+                                        resource-response]]
             [ring.middleware.format-params
              :refer [wrap-transit-json-params]]
             [ring.middleware.format-response
@@ -20,6 +23,7 @@
 ;;;; App server
 
 (defroutes app-routes
+  (GET "/" [] (resource-response "index.html" {:root "public"}))
   (route/resources "/")
   (route/not-found "Not found"))
 
