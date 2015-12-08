@@ -36,9 +36,9 @@
 
                  ;; Web app
                  [com.cognitect/transit-cljs "0.8.232"]
-                 [markdown-clj "0.9.82"]
                  [org.clojure/core.async "0.2.374"]
-                 [org.omcljs/om "1.0.0-alpha26-SNAPSHOT"]])
+                 [org.omcljs/om "1.0.0-alpha26-SNAPSHOT"]
+                 [cljsjs/showdown "0.4.0-1"]])
 
 (task-options!
  pom {:project 'custard
