@@ -132,9 +132,7 @@ main {
     &:after {
       transition: all 0.05s ease-in-out;
       position: absolute;
-      content: '.';
-      width: 0rem;
-      height: 1em;
+      content: '';
       right: 0;
     }
 
@@ -176,7 +174,7 @@ main {
   }
 
   &.node-unsatisfied .node-header:after {
-    border-left: 0.25rem solid @error-fg;
+    border-right: 0.25rem solid @error-fg;
     height: 1em;
   }
 
