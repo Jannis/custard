@@ -2,7 +2,8 @@
   (:import [java.io ByteArrayOutputStream]
            [net.sourceforge.plantuml
             FileFormat FileFormatOption SourceStringReader])
-  (:require [clojure.data.codec.base64 :as base64]
+  (:require [clojure.core.memoize :as memoize]
+            [clojure.data.codec.base64 :as base64]
             [cognitect.transit :as transit]
             [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
@@ -44,9 +45,12 @@
       (.generateImage reader stream format)
       (String. (.toByteArray stream)))))
 
+(def generate-uml-svg-cached
+  (memoize/lu generate-uml-svg :lu/threshold 100))
+
 (defn handle-uml [encoded]
   (let [uml (String. (base64/decode (.getBytes encoded)))
-        svg (generate-uml-svg uml)]
+        svg (generate-uml-svg-cached uml)]
     (-> (response svg)
         (content-type "image/svg+xml"))))
 
