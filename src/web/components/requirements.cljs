@@ -1,6 +1,7 @@
 (ns web.components.requirements
   (:require [om.next :as om :refer-macros [defui]]
-            [om.dom :as dom]))
+            [om.dom :as dom]
+            [web.components.markdown :refer [markdown]]))
 
 (defui Parent
   static om/Ident
@@ -74,7 +75,7 @@
                 (dom/div #js {:className "node-detail-label"}
                   "Description")
                 (dom/div #js {:className "node-detail-content"}
-                  description)))
+                  (markdown {:text description}))))
             (when parent
               (dom/div #js {:className "node-detail"}
                 (dom/div #js {:className "node-detail-label"}
