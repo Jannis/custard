@@ -129,15 +129,13 @@ main {
     cursor: pointer;
     line-height: 1.25rem;
 
-    &:before {
+    &:after {
       transition: all 0.05s ease-in-out;
       position: absolute;
       content: '.';
       width: 0rem;
-      height: 0rem;
-      left: 0;
-      color: rgba(0, 0, 0, 0.0);
-      border: 0;
+      height: 1em;
+      right: 0;
     }
 
     .node-header-title {
@@ -177,14 +175,9 @@ main {
     }
   }
 
-  &.node-unsatisfied .node-header:before {
-    border-top: 0.625em solid transparent;
-    border-bottom: 0.625em solid transparent;
-    border-left: 0.625em solid @error-fg;
-  }
-
-  .node-header:hover:before {
-    border-left-color: @header-light-bg;
+  &.node-unsatisfied .node-header:after {
+    border-left: 0.25rem solid @error-fg;
+    height: 1em;
   }
 
   .node-details-table {
