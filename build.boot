@@ -30,6 +30,8 @@
                  [compojure "1.4.0"]
                  [environ "1.0.1"]
                  [http-kit "2.1.19"]
+                 [net.sourceforge.plantuml/plantuml "8033"]
+                 [org.clojure/data.codec "0.1.0"]
                  [org.clojure/tools.reader "1.0.0-alpha1"]
                  [org.danielsz/system "0.1.9"]
                  [ring-middleware-format "0.6.0"]

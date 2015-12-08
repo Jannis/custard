@@ -1,10 +1,13 @@
 (ns server.handler
-  (:import [java.io ByteArrayOutputStream])
-  (:require [cognitect.transit :as transit]
-            [compojure.core :refer [defroutes OPTIONS POST]]
+  (:import [java.io ByteArrayOutputStream]
+           [net.sourceforge.plantuml
+            FileFormat FileFormatOption SourceStringReader])
+  (:require [clojure.data.codec.base64 :as base64]
+            [cognitect.transit :as transit]
+            [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
             [om.next.server :as om]
-            [ring.util.response :refer [response header]]
+            [ring.util.response :refer [content-type header response]]
             [ring.middleware.format-params
              :refer [wrap-transit-json-params]]
             [ring.middleware.format-response
@@ -34,11 +37,25 @@
   (println ">>" params)
   (response params))
 
+(defn generate-uml-svg [uml]
+  (let [reader (SourceStringReader. uml)
+        format (FileFormatOption. FileFormat/SVG)]
+    (with-open [stream (ByteArrayOutputStream.)]
+      (.generateImage reader stream format)
+      (String. (.toByteArray stream)))))
+
+(defn handle-uml [encoded]
+  (let [uml (String. (base64/decode (.getBytes encoded)))
+        svg (generate-uml-svg uml)]
+    (-> (response svg)
+        (content-type "image/svg+xml"))))
+
 (defroutes backend-routes
-  (OPTIONS "/query" {params :body-params} (handle-query params))
-  (POST    "/query" {params :body-params} (handle-query params))
-  (OPTIONS "/echo"  {params :body-params} (handle-echo params))
-  (POST    "/echo"  {params :body-params} (handle-echo params))
+  (OPTIONS "/query"     {params :body-params} (handle-query params))
+  (POST    "/query"     {params :body-params} (handle-query params))
+  (OPTIONS "/echo"      {params :body-params} (handle-echo params))
+  (POST    "/echo"      {params :body-params} (handle-echo params))
+  (GET     "/uml/:data" [data] (handle-uml data))
   (route/not-found "Not found"))
 
 (defn make-om-transit-decoder []
