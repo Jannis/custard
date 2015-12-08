@@ -20,7 +20,7 @@
 ;;;; App server
 
 (defroutes app-routes
-  (route/resources "/" {:root "."})
+  (route/resources "/")
   (route/not-found "Not found"))
 
 (def app-server

@@ -53,7 +53,8 @@
          '[deraen.boot-less :refer [less]]
          '[reloaded.repl :refer [init start stop go reset]]
          '[system.boot :refer [run system]]
-         '[server.systems :refer [development-system]])
+         '[server.systems :refer [development-system
+                                  production-system]])
 
 (deftask run-development
   [p path PATH str "Path to a CUSTARD Git repository"]
@@ -69,3 +70,25 @@
         (cljs :source-map true
               :optimizations :none)
         (repl :server true)))
+
+(deftask build-production
+  []
+  (comp (less)
+        (cljs :optimizations :simple)
+        (aot :namespace '#{server.core})))
+
+
+(deftask run-production
+  [p path PATH str "Path to a CUSTARD Git repository"]
+  (comp (environ :env {:custard-path path})
+        (build-production)
+        (run :main-namespace "server.core"
+             :arguments [#'development-system])
+        (wait)))
+
+(deftask uberjar
+  []
+  (comp (build-production)
+        (pom)
+        (uber)
+        (jar :main 'server.core)))
