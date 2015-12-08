@@ -9,7 +9,6 @@
             :regex "(@startuml([^]*?)@enduml)"
             :replace
             (fn [s match]
-              (println "MATCH >>" match)
               (let [data (base64/encodeString match)
                     url (str "http://localhost:3001/uml/" data)]
                 (str "[![UML](" url ")](" url ")")))}])

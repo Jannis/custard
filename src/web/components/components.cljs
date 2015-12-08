@@ -101,7 +101,6 @@
 (defui Components
   Object
   (render [this]
-    (println (om/props this))
     (let [items (:components (om/props this))]
       (dom/div #js {:className "nodes"}
         (for [item (filter #(nil? (:parent %)) items)]

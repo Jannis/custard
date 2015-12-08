@@ -101,7 +101,6 @@
 (defui Requirements
   Object
   (render [this]
-    (println (om/props this))
     (let [items (:requirements (om/props this))]
       (dom/div #js {:className "nodes"}
         (for [item (filter #(nil? (:parent %)) items)]
