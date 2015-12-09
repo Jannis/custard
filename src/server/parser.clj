@@ -26,35 +26,39 @@
               nil)})
 
 (defmethod readf :requirements
-  [{:keys [custard]} _ {:keys [state]}]
-  {:value (or (some->> state
-                       second
-                       (.state custard)
-                       c/requirements)
-              [])})
+  [{:keys [custard query]} _ {:keys [state]}]
+  (let [requirements (or (some->> state
+                                  second
+                                  (.state custard)
+                                  c/requirements)
+                         [])]
+    {:value (mapv #(select-keys % query) requirements)}))
 
 (defmethod readf :components
-  [{:keys [custard]} _ {:keys [state]}]
-  {:value (or (some->> state
-                       second
-                       (.state custard)
-                       c/components)
-              [])})
-
-(defmethod readf :tags
-  [{:keys [custard]} _ {:keys [state]}]
-  {:value (or (some->> state
-                       second
-                       (.state custard)
-                       c/tags)
-              [])})
+  [{:keys [custard query]} _ {:keys [state]}]
+  (let [components (or (some->> state
+                                second
+                                (.state custard)
+                                c/components)
+                         [])]
+    {:value (mapv #(select-keys % query) components)}))
 
 (defmethod readf :work-items
-  [{:keys [custard]} _ {:keys [state]}]
-  {:value (or (some->> state
-                       second
-                       (.state custard)
-                       c/work-items)
-              [])})
+  [{:keys [custard query]} _ {:keys [state]}]
+  (let [work-items (or (some->> state
+                                second
+                                (.state custard)
+                                c/work-items)
+                       [])]
+    {:value (mapv #(select-keys % query) work-items)}))
+
+(defmethod readf :tags
+  [{:keys [custard query]} _ {:keys [state]}]
+  (let [tags (or (some->> state
+                          second
+                          (.state custard)
+                          c/tags)
+                 [])]
+    {:value (mapv #(select-keys % query) tags)}))
 
 (def parser (om/parser {:read readf :mutate mutatef}))
