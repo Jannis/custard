@@ -107,11 +107,12 @@
                   :remotes (keys remotes)
                   :id-key :id}))
 
-(defn start-polling [root]
+(defn start-polling []
   (go
     (loop []
       (<! (timeout 2000))
-      (let [query (om/get-query root)
+      (let [root (-> reconciler :state deref :root)
+            query (om/get-query root)
             cfg (:config reconciler)
             remotes (:remotes cfg)
             sends (om/gather-sends cfg query remotes)]

@@ -74,4 +74,4 @@
 (defn run []
   (enable-console-print!)
   (om/add-root! reconciler App (gdom/getElement "app"))
-  (start-polling App))
+  (start-polling))
