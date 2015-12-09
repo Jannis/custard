@@ -6,12 +6,18 @@
             [om.dom :as dom]
             [web.env :as env]))
 
+(defn base64-encode [data]
+  (str/replace (base64/encodeString data)
+               #"\+|/"
+               {"+" "-"
+                "/" "_"}))
+
 (defn uml-extension [converter]
   #js [#js {:type "lang"
             :regex "(@startuml([^]*?)@enduml)"
             :replace
             (fn [s match]
-              (let [data (base64/encodeString match)
+              (let [data (base64-encode match)
                     url (str/join "/" [env/BACKEND_URL "uml" data])]
                 (str "[![UML](" url ")](" url ")")))}])
 

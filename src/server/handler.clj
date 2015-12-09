@@ -4,6 +4,7 @@
             FileFormat FileFormatOption SourceStringReader])
   (:require [clojure.core.memoize :as memoize]
             [clojure.data.codec.base64 :as base64]
+            [clojure.string :as str]
             [cognitect.transit :as transit]
             [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
@@ -52,8 +53,15 @@
 (def generate-uml-svg-cached
   (memoize/lu generate-uml-svg :lu/threshold 100))
 
+(defn base64-decode [data]
+  (let [normalized (str/replace data
+                                #"-|_"
+                                {"-" "+"
+                                 "_" "/"})]
+    (String. (base64/decode (.getBytes normalized)))))
+
 (defn handle-uml [encoded]
-  (let [uml (String. (base64/decode (.getBytes encoded)))
+  (let [uml (base64-decode encoded)
         svg (generate-uml-svg-cached uml)]
     (-> (response svg)
         (content-type "image/svg+xml"))))
