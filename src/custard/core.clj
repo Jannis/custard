@@ -72,7 +72,9 @@
       @refs))
 
   (state [this id]
-    (first (filter #(= id (:id %)) (states this))))
+    (if (= id "UNCOMMITTED")
+      @uncommitted
+      (first (filter #(= id (:id %)) (states this)))))
 
   component/Lifecycle
   (start [this]
