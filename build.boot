@@ -82,7 +82,7 @@
   []
   (comp (build-production)
         (run :main-namespace "server.core"
-             :arguments [#'development-system])
+             :arguments [#'production-system])
         (wait)))
 
 (deftask uberjar
