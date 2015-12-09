@@ -7,9 +7,9 @@
 (defmulti mutatef (fn [env key params] key))
 
 (defmethod readf :states
-  [{:keys [custard]} _ _]
+  [{:keys [custard query]} _ _]
   {:value (into []
-                (map #(select-keys % [:id :title :type]))
+                (map #(select-keys % query))
                 (.states custard))})
 
 (defmethod readf :project
