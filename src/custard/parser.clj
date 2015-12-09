@@ -36,7 +36,14 @@
 
 ;;;; Node tree
 
-(defn normalize-kind [node]
+(defn process-down [node f ctx]
+  (let [{:keys [node ctx]} (f node ctx)]
+    (-> node
+        (update :children
+                (fn [children]
+                  (mapv #(process-down % f ctx) children))))))
+
+(defn normalize-kind [node _]
   (letfn [(normalize [kind]
             (let [aliases {"project" ["project"]
                            "requirement" ["requirement" "req" "r"]
@@ -48,30 +55,22 @@
                                ffirst)
                           kind)]
               res))]
-    (-> (if (contains? node "kind")
-          (update node "kind" normalize)
-          node)
-        (update :children (fn [children]
-                            (mapv #(normalize-kind %)
-                                  children))))))
+    {:node (if (contains? node "kind")
+             (update node "kind" normalize)
+             node)}))
 
 (defn inject-name [node parent-segments]
   (let [segments (if (nil? (:name node))
                    parent-segments
                    (conj parent-segments (:name node)))]
-    (-> node
-        (assoc :name (str/join "/" segments))
-        (update :children (fn [children]
-                            (mapv #(inject-name % segments)
-                                  children))))))
+    {:node (assoc node :name (str/join "/" segments))
+     :ctx segments}))
 
-(defn inject-parent [node parent]
-  (let [next-parent (if (contains? node "kind") node parent)]
-    (-> node
-        (assoc :parent (or (:parent node) (:name parent)))
-        (update :children (fn [children]
-                            (mapv #(inject-parent % next-parent)
-                                  children))))))
+(defn inject-parent [node ctx]
+  (let [parent ctx]
+    {:node (assoc node :parent (or (:parent node)
+                                   (:name parent)))
+     :ctx (if (contains? node "kind") node parent)}))
 
 (defn build-tree [root data]
   (letfn [(build-node [name-segment data]
@@ -90,9 +89,9 @@
                     (build-node name-segment data)))]
     (let [tree (reduce build-step root data)]
       (-> tree
-          (normalize-kind)
-          (inject-name [])
-          (inject-parent nil)))))
+          (process-down normalize-kind nil)
+          (process-down inject-name [])
+          (process-down inject-parent nil)))))
 
 (defn flatten-tree [node]
   (letfn [(collect-step [m node]
