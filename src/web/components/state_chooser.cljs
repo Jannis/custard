@@ -12,15 +12,11 @@
     [:id :name :type])
   Object
   (render [this]
-    (let [{:keys [id name type]} (om/props this)]
+    (let [{:keys [id name type]} (om/props this)
+          prefixes #"refs/heads/|refs/remotes/|refs/tags/"]
       (dom/option #js {:value id}
-        (condp = type
-          :branch "b "
-          :tag "t "
-          " ")
-        (str/replace name
-                     #"refs/heads/|refs/remotes/|refs/tags/"
-                     "")))))
+        (condp = type :branch "b " :tag "t " " ")
+        (str/replace name prefixes "")))))
 
 (def state-chooser-item (om/factory StateChooserItem {:keyfn :id}))
 
