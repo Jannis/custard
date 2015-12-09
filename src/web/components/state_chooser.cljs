@@ -1,5 +1,6 @@
 (ns web.components.state-chooser
-  (:require [om.next :as om :refer-macros [defui]]
+  (:require [clojure.string :as str]
+            [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]))
 
 (defui StateChooserItem
@@ -17,7 +18,9 @@
           :branch "b "
           :tag "t "
           " ")
-        name))))
+        (str/replace name
+                     #"refs/heads/|refs/remotes/|refs/tags/"
+                     "")))))
 
 (def state-chooser-item (om/factory StateChooserItem {:keyfn :id}))
 
