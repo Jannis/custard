@@ -1,14 +1,21 @@
 @import "colors.less";
 
-@default-bg: @teal-50;
+@default-bg: @blue-50;
 @default-fg: @black;
 
 @error-fg: @red-a700;
 
-@header-bg: @teal-900;
+@header-bg: @blue-600;
 @header-fg: @white;
-@header-light-bg: @teal-800;
+@header-light-bg: @blue-500;
 @header-light-fg: @white;
+
+@heading-fg: @black-dark;
+@heading-bg: @default-bg;
+
+@detail-fg: @black-darker;
+@detail-bg: @white-dark;
+@detail-border-color: @black-lighter;
 
 @border-radius: 0.5rem;
 
@@ -132,7 +139,8 @@ main {
     > .node-header {
       margin: 2rem 0rem 0.5rem 0rem;
       font-size: 1.45rem;
-      color: lighten(@default-fg, 33%);
+      color: @heading-fg;
+      background: @heading-bg;
     }
 
     > .node-subnodes {
@@ -165,8 +173,9 @@ main {
     table-layout: fixed;
     width: 100%;
     border-spacing: 1rem;
-    border: thin solid darken(@default-bg, 10%);
-    background: darken(@default-bg, 5%);
+    border: thin solid @detail-border-color;
+    color: @detail-fg;
+    background: @detail-bg;
     margin-bottom: 0.5rem;
 
     .node-detail {
@@ -200,7 +209,8 @@ main {
 
   .project-copyright-header {
     font-weight: normal;
-    color: lighten(@default-fg, 33%);
+    color: @heading-fg;
+    background: @heading-bg;
   }
 
   .project-copyright-text {
