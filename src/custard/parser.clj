@@ -2,6 +2,10 @@
   (:require [clojure.string :as str]
             [clojure.walk :refer [keywordize-keys]]
             [clj-yaml.core :as yaml]
+            [gitiom.blob :as git-blob]
+            [gitiom.commit :as git-commit]
+            [gitiom.repo :as git-repo]
+            [gitiom.tree :as git-tree]
             [me.raynes.fs :as fs]))
 
 (defn normalize-filename [file]
@@ -139,3 +143,19 @@
                                         slurp
                                         (yaml/parse-string false))))
                       (into {})))))
+
+(defn parse-commit [repo commit]
+  (let [tree (git-commit/tree repo commit)
+        walk (git-tree/walk repo [tree] true)
+        lazy-walk (take-while #(.next %) (repeat walk))]
+    (letfn [(parse-entry [res walk]
+              (if (and (not (.isSubtree walk))
+                       (re-matches #".*\.yaml$" (.getNameString walk)))
+                (let [oid (.getObjectId walk 0)
+                      blob (git-blob/load repo oid)
+                      data (String. (:data blob))]
+                  (assoc res
+                         (.getPathString walk)
+                         (yaml/parse-string data false)))
+                res))]
+      (parse-files (reduce parse-entry {} lazy-walk)))))

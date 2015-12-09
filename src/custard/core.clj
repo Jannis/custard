@@ -1,8 +1,10 @@
 (ns custard.core
   (:require [com.stuartsierra.component :as component]
+            [gitiom.reference :as git-ref]
+            [gitiom.repo :as git-repo]
             [juxt.dirwatch :refer [watch-dir close-watcher]]
             [me.raynes.fs :as fs]
-            [custard.parser :refer [parse-uncommitted]]))
+            [custard.parser :refer [parse-commit parse-uncommitted]]))
 
 ;;;; Protocols
 
@@ -17,9 +19,9 @@
   (states [this])
   (state [this id]))
 
-;;;; Uncommitted state
+;;;; State representation
 
-(defrecord UncommittedState [id title type graph]
+(defrecord State [id name type graph]
   IState
   (project [this]
     (first (into []
@@ -41,36 +43,60 @@
   (tags [this]
     (mapv #(get-in graph %) (:tags graph))))
 
-(defn uncommitted-state [graph]
-  (UncommittedState. "UNCOMMITTED" "UNCOMMITTED" :none graph))
+;;;; The uncommitted state (working directory)
+
+(defn uncommitted-state [dir]
+  (let [graph (parse-uncommitted dir)]
+    (State. "UNCOMMITTED" "UNCOMMITTED" :none graph)))
+
+;;;; Branch and tag states
+
+(defn ref-states [repo]
+  (let [refs (git-ref/load-all repo)]
+    (mapv (fn [ref]
+            (State. (:name ref)
+                    (:name ref)
+                    (:type ref)
+                    (if (:head ref)
+                      (parse-commit repo (:head ref))
+                      [])))
+          refs)))
 
 ;;;; Default Custard implementation
 
-(defrecord Custard [dir repo watcher uncommitted]
+(defrecord Custard [dir repo watcher refs uncommitted]
   ICustard
   (states [this]
-    (into [(uncommitted-state @uncommitted)]
-          []))
+    (into [@uncommitted] @refs))
 
   (state [this id]
     (first (filter #(= id (:id %)) (states this))))
 
   component/Lifecycle
   (start [this]
-    (reset! uncommitted (parse-uncommitted dir))
-    (assoc this :watcher
-           (watch-dir (fn [_]
-                        (reset! uncommitted (parse-uncommitted dir)))
-                      dir)))
+    (let [repo (git-repo/load dir)]
+      (reset! uncommitted (uncommitted-state dir))
+      (reset! refs (ref-states repo))
+      (-> this
+          (assoc :repo repo)
+          (assoc :watcher
+                 (watch-dir (fn [_]
+                              (reset! uncommitted
+                                      (uncommitted-state dir))
+                              (reset! refs (ref-states repo)))
+                            dir)))))
 
   (stop [this]
     (when watcher
       (close-watcher watcher))
-    (dissoc this :watcher)))
+    (-> this
+        (dissoc :watcher)
+        (dissoc :repo))))
 
 (defn new-custard [path]
   {:pre [(fs/directory? (fs/file path))]}
   (map->Custard {:dir (fs/file path)
                  :repo nil
                  :watcher nil
+                 :refs (atom [])
                  :uncommitted (atom [])}))
