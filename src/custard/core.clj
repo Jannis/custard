@@ -39,9 +39,15 @@
                 (filter #(= "component" (:kind %))))
           (:nodes graph)))
   (work-items [this]
-    (mapv #(get-in graph %) (:work-items graph)))
+    (into []
+          (comp (map #(get-in graph %))
+                (filter #(= "work-item" (:kind %))))
+          (:nodes graph)))
   (tags [this]
-    (mapv #(get-in graph %) (:tags graph))))
+    (into []
+          (comp (map #(get-in graph %))
+                (filter #(= "tag" (:kind %))))
+          (:nodes graph))))
 
 ;;;; The uncommitted state (working directory)
 
