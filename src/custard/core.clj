@@ -67,22 +67,27 @@
 (defrecord Custard [dir repo watcher refs uncommitted]
   ICustard
   (states [this]
-    (into [@uncommitted] @refs))
+    (if @uncommitted
+      (into [@uncommitted] @refs)
+      @refs))
 
   (state [this id]
     (first (filter #(= id (:id %)) (states this))))
 
   component/Lifecycle
   (start [this]
-    (let [repo (git-repo/load dir)]
-      (reset! uncommitted (uncommitted-state dir))
+    (let [repo (git-repo/load dir)
+          bare? (.isBare (.getRepository repo))]
+      (when-not bare?
+        (reset! uncommitted (uncommitted-state dir)))
       (reset! refs (ref-states repo))
       (-> this
           (assoc :repo repo)
           (assoc :watcher
                  (watch-dir (fn [_]
-                              (reset! uncommitted
-                                      (uncommitted-state dir))
+                              (when-not bare?
+                                (reset! uncommitted
+                                        (uncommitted-state dir)))
                               (reset! refs (ref-states repo)))
                             dir)))))
 
@@ -99,4 +104,4 @@
                  :repo nil
                  :watcher nil
                  :refs (atom [])
-                 :uncommitted (atom [])}))
+                 :uncommitted (atom nil)}))
