@@ -22,7 +22,7 @@
 
                  ;; CUSTARD
                  [com.stuartsierra/component "0.3.1"]
-                 [gitiom "0.1.0"]
+                 [gitiom "0.1.1"]
                  [juxt/dirwatch "0.2.2"]
                  [me.raynes/fs "1.4.6"]
                  [org.clojars.mpenet/clj-yaml "0.3.4"]
