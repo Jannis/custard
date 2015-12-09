@@ -14,10 +14,8 @@
 
 (defmethod readf :state
   [{:keys [custard query]} _ {:keys [state]}]
-  {:value (or (some->> state
-                       second
-                       (.state custard))
-              nil)})
+  (let [state (.state custard (second state))]
+    {:value (when state (select-keys state query))}))
 
 (defmethod readf :project
   [{:keys [custard]} _ {:keys [state]}]
