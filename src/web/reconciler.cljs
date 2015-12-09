@@ -20,6 +20,11 @@
     {:value (om/db->tree query (get st key) st)
      :remote true}))
 
+(defmethod read :state
+  [{:keys [state query]} key params]
+  {:value (get-in @state (:state params))
+   :remote true})
+
 (defmethod read :project
   [{:keys [state query]} key params]
   (let [st @state]
@@ -64,9 +69,7 @@
 (def parser
   (om/parser {:read read :mutate mutate}))
 
-(def initial-state
-  {:states [{:id "UNCOMMITTED" :name "UNCOMMITTED" :type :none}]
-   :requirements []})
+(def initial-state {})
 
 (defn merge-result-tree [a b]
   (letfn [(merge-tree [a b]

@@ -21,6 +21,8 @@
   static om/IQuery
   (query [this]
     `[;; CUSTARD data
+      ({:state ~(om/get-query StateChooserItem)}
+       {:state ?state})
       {:states ~(om/get-query StateChooserItem)}
       ({:project ~(om/get-query Project)} {:state ?state})
       ({:requirements ~(om/get-query Requirement)} {:state ?state})
@@ -36,6 +38,18 @@
 
   (select-view [this view]
     (om/transact! this `[(app/set-view {:view ~view})]))
+
+  (componentWillUpdate [this new-props new-state]
+    (let [{:keys [state states]} new-props]
+      (if (and (nil? state)
+               (not (empty? states)))
+        (let [get-fn (fn [id] (first (filter #(= id (:id %)) states)))
+              head (get-fn "HEAD")
+              master (get-fn "refs/heads/master")]
+          (cond
+            head (.select-state this [:state "HEAD"])
+            master (.select-state this [:state "refs/heads/master"])
+            :else (.select-state this [:state (:id (first states))]))))))
 
   (render [this]
     (dom/div #js {:className "app"}
