@@ -16,6 +16,7 @@
                  [weasel "0.7.0"]
 
                  ;; General
+                 [adzerk/env "0.2.0"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.170"]
 

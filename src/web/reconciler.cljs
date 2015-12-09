@@ -1,9 +1,11 @@
 (ns web.reconciler
   (:import [goog.net XhrIo])
   (:require [cljs.core.async :refer [<! timeout]]
+            [clojure.string :as str]
             [cognitect.transit :as transit]
             [om.next :as om]
-            [om.next.protocols :as om-protocols])
+            [om.next.protocols :as om-protocols]
+            [web.env :as env])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defmulti read om/dispatch)
@@ -77,7 +79,7 @@
   (merge-fn results))
 
 (def remotes
-  {:remote {:url "http://localhost:3001/query"
+  {:remote {:url (str/join "/" [env/BACKEND_URL "query"])
             :callback merge-remote}})
 
 (defn- transit-post [url data cb]
