@@ -59,9 +59,8 @@
                                   production-system]])
 
 (deftask run-development
-  [p path PATH str "Path to a CUSTARD Git repository"]
+  []
   (comp (watch)
-        (environ :env {:custard-path path})
         (system :sys #'development-system
                 :auto-start true
                 :hot-reload true
@@ -80,9 +79,8 @@
         (aot :namespace '#{server.core})))
 
 (deftask run-production
-  [p path PATH str "Path to a CUSTARD Git repository"]
-  (comp (environ :env {:custard-path path})
-        (build-production)
+  []
+  (comp (build-production)
         (run :main-namespace "server.core"
              :arguments [#'development-system])
         (wait)))
