@@ -17,6 +17,9 @@
 @detail-bg: @white-dark;
 @detail-border-color: @black-lighter;
 
+@badge-fg: @white-darker;
+@badge-bg: @blue-300;
+
 @border-radius: 0.5rem;
 
 body {
@@ -230,4 +233,38 @@ main {
   *:last-child {
     margin-bottom: 0;
   }
+}
+
+.node-link {
+  display: table;
+  margin: 0;
+  border-spacing: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.25rem;
+
+  .badge {
+    display: table-cell;
+  }
+
+  .node-link-title {
+    display: table-cell;
+    width: 100%;
+    padding: 0 0.25rem 0 0.25rem;
+    box-sizing: border-box;
+  }
+
+  .node-link-name {
+    display: table-cell;
+    text-align: right;
+    opacity: 0.5;
+  }
+}
+
+.badge {
+  color: @badge-fg;
+  background: @badge-bg;
+  border-radius: calc(@border-radius * 0.8);
+  padding: 0rem 0.5rem 0rem 0.5rem;
+  border: 0;
 }
