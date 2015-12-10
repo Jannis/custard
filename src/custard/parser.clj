@@ -8,23 +8,22 @@
             [gitiom.tree :as git-tree]
             [me.raynes.fs :as fs]))
 
-(defn normalize-filename [file]
-  (last (first (re-seq #"(.*)\..*$" file))))
+;;;; Path utilities
 
-(defn relative-filename [root file]
+(defn strip-extension [path]
+  (last (first (re-seq #"(.*)\..*$" path))))
+
+(defn relative-path [root path]
   (let [root-segments (fs/split root)
-        file-segments (fs/split file)
-        root-size (count root-segments)]
+        path-segments (fs/split path)
+        n (count root-segments)]
     (str/join "/"
-              (condp = (take root-size file-segments)
-                root-segments (drop root-size file-segments)
-                file-segments))))
+              (condp = (take n path-segments)
+                root-segments (drop n path-segments)
+                path-segments))))
 
-(defn process-filename [[filename data]]
-  (let [name-segments (-> filename
-                          normalize-filename
-                          (str/split #"/"))]
-    [name-segments data]))
+(defn path->segments [path]
+  (fs/split (strip-extension path)))
 
 (defn recursive-merge [a b]
   (if (and (map? a) (map? b))
@@ -43,7 +42,7 @@
                 (fn [children]
                   (mapv #(process-down % f ctx) children))))))
 
-(defn normalize-kind [node _]
+(defn set-kind [node _]
   (letfn [(normalize [kind]
             (let [aliases {"project" ["project"]
                            "requirement" ["requirement" "req" "r"]
@@ -59,14 +58,7 @@
              (update node "kind" normalize)
              node)}))
 
-(defn inject-name [node parent-segments]
-  (let [segments (if (nil? (:name node))
-                   parent-segments
-                   (conj parent-segments (:name node)))]
-    {:node (assoc node :name (str/join "/" segments))
-     :ctx segments}))
-
-(defn inject-parent [node ctx]
+(defn set-parent [node ctx]
   (let [parent ctx]
     {:node (assoc node :parent (or (:parent node)
                                    (:name parent)))
@@ -77,26 +69,27 @@
                  (fn [mapped-here]
                    (mapv #(hash-map :name %) mapped-here)))})
 
-(defn build-tree [root data]
-  (letfn [(build-node [name-segment data]
+(defn build-tree [data]
+  (letfn [(build-children [name-segments data]
+            (into []
+                  (comp (filter #(map? (second %)))
+                        (map (fn [[k v]]
+                               (build-node (conj name-segments k) v))))
+                  data))
+          (build-node [name-segments data]
             (cond
               (map? data)
-              (into {:name name-segment
-                     :children (->> data
-                                    (map (fn [[k v]]
-                                           (if (map? v)
-                                             (build-node k v))))
-                                    (keep identity)
-                                    (into []))}
+              (into {:name (str/join "/" name-segments)
+                     :children (build-children name-segments data)}
                     (remove #(map? (second %)) data))))
           (build-step [root [name-segment data]]
             (update root :children conj
-                    (build-node name-segment data)))]
-    (let [tree (reduce build-step root data)]
+                    (build-node [name-segment] data)))]
+    (let [root {:name [] :children ()}
+          tree (reduce build-step root data)]
       (-> tree
-          (process-down normalize-kind nil)
-          (process-down inject-name [])
-          (process-down inject-parent nil)
+          (process-down set-kind nil)
+          (process-down set-parent nil)
           (process-down create-mapped-here-links nil)))))
 
 (defn flatten-tree [node]
@@ -130,24 +123,33 @@
             (build-node graph node))]
     (reduce build-step {:node {} :nodes []} flat-tree)))
 
-(defn parse-files [files]
-  (let [data (->> files
-                  (map process-filename)
-                  (reduce parse-step {}))
-        tree (build-tree {:children []} data)
+(defn recursive-merge [a b]
+  (if (and (map? a) (map? b))
+    (merge-with recursive-merge a b)
+    (merge a b)))
+
+(defn merge-file-data [m [path data]]
+  (update-in m (path->segments path) recursive-merge data))
+
+(defn process-files [path->data]
+  (let [data (reduce merge-file-data {} path->data)
+        tree (build-tree data)
         flat-tree (flatten-tree tree)
         graph (build-graph flat-tree)]
     graph))
 
+(defn parse-yaml [data]
+  (try
+    (yaml/parse-string data false)
+    (catch Exception e
+      {:error (str e)})))
+
 (defn parse-uncommitted [dir]
-  (let [files (->> (fs/find-files dir #".*\.yaml$")
-                   (filter #(fs/file? %)))]
-    (parse-files (->> files
-                      (map #(vector (relative-filename dir %)
-                                    (-> %
-                                        slurp
-                                        (yaml/parse-string false))))
-                      (into {})))))
+  (let [files (filter fs/file? (fs/find-files dir #".*\.yaml$"))
+        paths (map #(relative-path dir %) files)
+        datas (map #(parse-yaml (slurp %)) files)
+        path->data (zipmap paths datas)]
+    (process-files path->data)))
 
 (defn parse-commit [repo commit]
   (let [tree (git-commit/tree repo commit)
@@ -161,6 +163,6 @@
                       data (String. (:data blob))]
                   (assoc res
                          (.getPathString walk)
-                         (yaml/parse-string data false)))
+                         (parse-yaml data)))
                 res))]
-      (parse-files (reduce parse-entry {} lazy-walk)))))
+      (process-files (reduce parse-entry {} lazy-walk)))))
