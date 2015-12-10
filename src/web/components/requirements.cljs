@@ -1,36 +1,8 @@
 (ns web.components.requirements
   (:require [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [web.components.markdown :refer [markdown]]))
-
-(defui Parent
-  static om/Ident
-  (ident [this props]
-    [:node (:name props)])
-  static om/IQuery
-  (query [this]
-    [:name :title])
-  Object
-  (render [this]
-    (dom/div nil
-      (:title (om/props this)))))
-
-(def parent* (om/factory Parent))
-
-(defui MapTarget
-  static om/Ident
-  (ident [this props]
-    [:node (:name props)])
-  static om/IQuery
-  (query [this]
-    [:name :title :kind])
-  Object
-  (render [this]
-    (let [{:keys [name title kind]} (om/props this)]
-      (dom/div #js {:className "node-map-target"}
-        title))))
-
-(def map-target (om/factory MapTarget {:key-fn :name}))
+            [web.components.markdown :refer [markdown]]
+            [web.components.node-link :refer [NodeLink node-link]]))
 
 (declare requirement)
 
@@ -40,10 +12,10 @@
     [:node (:name props)])
   static om/IQuery
   (query [this]
-    [:name :title :description
-     {:parent (om/get-query Parent)}
+    [:name :title :kind :description
+     {:parent (om/get-query NodeLink)}
      {:children '...}
-     {:mapped-to (om/get-query MapTarget)}])
+     {:mapped-to (om/get-query NodeLink)}])
   Object
   (toggle-expanded [this]
     (om/update-state! this update :expanded not))
@@ -79,9 +51,9 @@
             (when parent
               (dom/div #js {:className "node-detail"}
                 (dom/div #js {:className "node-detail-label"}
-                  "Parent")
+                  "NodeLink")
                 (dom/div #js {:className "node-detail-content"}
-                         (parent* parent))))
+                  (node-link parent))))
             (dom/div #js {:className "node-detail"}
               (dom/div #js {:className "node-detail-label"}
                 "Mapped to")
@@ -90,7 +62,7 @@
                   (dom/div #js {:className "error"}
                     "Not mapped to any components yet.")
                   (for [target mapped-to]
-                    (map-target target)))))))
+                    (node-link target)))))))
         (dom/div #js {:className "node-subnodes"}
           (for [child children]
             (requirement
