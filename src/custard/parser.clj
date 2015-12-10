@@ -77,49 +77,46 @@
                 (fn [children]
                   (mapv #(process-down % f ctx) children))))))
 
-(defn set-parent [node ctx]
-  (let [parent ctx]
-    {:node (assoc node :parent
-                  (or (:parent node)
-                      (when parent {:name (:name parent)})))
-     :ctx (if (custard-node? node) node parent)}))
+(declare parse-nodes)
 
-(declare parse-node)
+(defn parse-children [name-segments parent-name data]
+  (letfn [(parse-child [[name-segment data]]
+            (parse-nodes (conj name-segments name-segment)
+                         parent-name data))]
+    (->> data
+         (filter #(map? (second %)))
+         (map parse-child)
+         (apply concat)
+         (into []))))
 
-(defn parse-children [name-segments data]
-  (into []
-        (comp (filter #(map? (second %)))
-              (map (fn [[k v]]
-                     (parse-node (conj name-segments k) v))))
-        data))
-
-(defn parse-node [name-segments data]
+(defn parse-nodes [name-segments parent-name data]
   {:pre [(map? data)]}
   (let [kind (parse-kind data)
-        parser (kind-parsers kind)
-        basic {:name (str/join "/" name-segments)
-               :children (parse-children name-segments data)}]
+        parser (kind-parsers kind)]
     (if (and kind parser)
-      (merge basic
-             {:kind kind}
-             (parse-common data)
-             (parser data))
-      basic)))
+      (let [name (str/join "/" name-segments)
+            basic {:name name
+                   :parent parent-name
+                   :children (parse-children name-segments name data)}]
+        [(merge basic
+                 {:kind kind}
+                 (parse-common data)
+                 (parser data))])
+      (parse-children name-segments parent-name data))))
 
 (defn parse-tree [data]
   (letfn [(parse-step [root [name-segment data]]
-            (let [node (parse-node [name-segment] data)]
-              (update root :children conj node)))]
-    (let [root {:name [] :children ()}
+            (let [nodes (parse-nodes [name-segment] nil data)]
+              (update root :children concat nodes)))]
+    (let [root {:name nil :children []}
           tree (reduce parse-step root data)]
-      (-> tree
-          (process-down set-parent nil)))))
+      tree)))
 
 (defn flatten-tree [node]
   (letfn [(collect-step [m node]
             (merge m (flatten-tree node)))]
     (reduce collect-step
-            (if (custard-node? node) 
+            (if-not (nil? (:name node))
               {(:name node) node}
               {})
             (:children node))))
@@ -131,8 +128,8 @@
             {:name (:name node)})
           (parse-node [graph node]
             (let [ident (node->ident node)
-                  linked-node (update node :children
-                                           #(mapv node->link %))]
+                  child-links (mapv node->link (:children node))
+                  linked-node (assoc node :children child-links)]
               (-> graph
                   (update :nodes conj ident)
                   (assoc-in ident linked-node))))
