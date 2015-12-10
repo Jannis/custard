@@ -41,7 +41,7 @@
                  ;; Web app
                  [com.cognitect/transit-cljs "0.8.232"]
                  [org.clojure/core.async "0.2.374"]
-                 [org.omcljs/om "1.0.0-alpha25"]
+                 [org.omcljs/om "1.0.0-alpha26"]
                  [cljsjs/showdown "0.4.0-1"]])
 
 (task-options!
