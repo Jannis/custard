@@ -54,7 +54,7 @@
                 (dom/div #js {:className "node-detail-label"}
                   "Parent")
                 (dom/div #js {:className "node-detail-content"}
-                         (node-link parent))))
+                  (node-link parent))))
             (dom/div #js {:className "node-detail"}
               (dom/div #js {:className "node-detail-label"}
                 "Mapped here")
