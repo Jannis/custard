@@ -25,15 +25,50 @@
 (defn path->segments [path]
   (fs/split (strip-extension path)))
 
-(defn recursive-merge [a b]
-  (if (and (map? a) (map? b))
-    (merge-with recursive-merge a b)
-    (merge a b)))
+;;;; Parsing
 
-(defn parse-step [tree [name-segments data]]
-  (update-in tree name-segments recursive-merge data))
+(defn parse-common [data]
+  {:title (data "title")
+   :description (data "description")
+   :mapped-here (mapv #(hash-map :name %) (data "mapped-here"))
+   :tags (mapv #(hash-map :name %) (data "tags"))})
 
-;;;; Node tree
+(defn parse-project [data]
+  {:copyright (data "copyright")})
+
+(defn parse-requirement [data]
+  {})
+
+(defn parse-component [data]
+  {})
+
+(defn parse-work-item [data]
+  {})
+
+(defn parse-tag [data]
+  {})
+
+(def kind-parsers
+  {"project" parse-project
+   "requirement" parse-requirement
+   "component" parse-component
+   "work-item" parse-work-item
+   "tag" parse-tag})
+
+(def kind-aliases
+  {"project" ["project"]
+   "requirement" ["requirement" "req" "r"]
+   "component" ["component" "comp" "c"]
+   "work-item" ["work-item" "work" "w"]
+   "tag" ["tag" "t"]})
+
+(defn parse-kind [data]
+  (when (contains? data "kind")
+    (when-let [kind (get data "kind")]
+      (ffirst (filter #(some #{kind} (second %)) kind-aliases)))))
+
+(defn custard-node? [node]
+  (contains? node :kind))
 
 (defn process-down [node f ctx]
   (let [{:keys [node ctx]} (f node ctx)]
@@ -42,61 +77,49 @@
                 (fn [children]
                   (mapv #(process-down % f ctx) children))))))
 
-(defn set-kind [node _]
-  (letfn [(normalize [kind]
-            (let [aliases {"project" ["project"]
-                           "requirement" ["requirement" "req" "r"]
-                           "component" ["component" "comp" "c"]
-                           "work-item" ["work-item" "work" "w"]
-                           "tag" ["tag" "t"]}
-                  res (or (->> aliases
-                               (filter #(some #{kind} (second %)))
-                               ffirst)
-                          kind)]
-              res))]
-    {:node (if (contains? node "kind")
-             (update node "kind" normalize)
-             node)}))
-
 (defn set-parent [node ctx]
   (let [parent ctx]
-    {:node (assoc node :parent (or (:parent node)
-                                   (:name parent)))
-     :ctx (if (contains? node "kind") node parent)}))
+    {:node (assoc node :parent
+                  (or (:parent node)
+                      (when parent {:name (:name parent)})))
+     :ctx (if (custard-node? node) node parent)}))
 
-(defn create-mapped-here-links [node _]
-  {:node (update node "mapped-here"
-                 (fn [mapped-here]
-                   (mapv #(hash-map :name %) mapped-here)))})
+(declare parse-node)
 
-(defn build-tree [data]
-  (letfn [(build-children [name-segments data]
-            (into []
-                  (comp (filter #(map? (second %)))
-                        (map (fn [[k v]]
-                               (build-node (conj name-segments k) v))))
-                  data))
-          (build-node [name-segments data]
-            (cond
-              (map? data)
-              (into {:name (str/join "/" name-segments)
-                     :children (build-children name-segments data)}
-                    (remove #(map? (second %)) data))))
-          (build-step [root [name-segment data]]
-            (update root :children conj
-                    (build-node [name-segment] data)))]
+(defn parse-children [name-segments data]
+  (into []
+        (comp (filter #(map? (second %)))
+              (map (fn [[k v]]
+                     (parse-node (conj name-segments k) v))))
+        data))
+
+(defn parse-node [name-segments data]
+  {:pre [(map? data)]}
+  (let [kind (parse-kind data)
+        parser (kind-parsers kind)
+        basic {:name (str/join "/" name-segments)
+               :children (parse-children name-segments data)}]
+    (if (and kind parser)
+      (merge basic
+             {:kind kind}
+             (parse-common data)
+             (parser data))
+      basic)))
+
+(defn parse-tree [data]
+  (letfn [(parse-step [root [name-segment data]]
+            (let [node (parse-node [name-segment] data)]
+              (update root :children conj node)))]
     (let [root {:name [] :children ()}
-          tree (reduce build-step root data)]
+          tree (reduce parse-step root data)]
       (-> tree
-          (process-down set-kind nil)
-          (process-down set-parent nil)
-          (process-down create-mapped-here-links nil)))))
+          (process-down set-parent nil)))))
 
 (defn flatten-tree [node]
   (letfn [(collect-step [m node]
             (merge m (flatten-tree node)))]
     (reduce collect-step
-            (if (contains? node "kind")
+            (if (custard-node? node) 
               {(:name node) node}
               {})
             (:children node))))
@@ -106,21 +129,15 @@
             [:node (:name node)])
           (node->link [node]
             {:name (:name node)})
-          (build-node [graph node]
+          (parse-node [graph node]
             (let [ident (node->ident node)
-                  children (:children node)
-                  parent (if (nil? (:parent node))
-                           nil
-                           {:name (:parent node)})
-                  linked-data (-> node
-                                  (assoc :parent parent)
-                                  (update :children #(mapv node->link %))
-                                  keywordize-keys)]
+                  linked-node (update node :children
+                                           #(mapv node->link %))]
               (-> graph
                   (update :nodes conj ident)
-                  (assoc-in ident linked-data))))
+                  (assoc-in ident linked-node))))
           (build-step [graph [name node]]
-            (build-node graph node))]
+            (parse-node graph node))]
     (reduce build-step {:node {} :nodes []} flat-tree)))
 
 (defn recursive-merge [a b]
@@ -133,7 +150,7 @@
 
 (defn process-files [path->data]
   (let [data (reduce merge-file-data {} path->data)
-        tree (build-tree data)
+        tree (parse-tree data)
         flat-tree (flatten-tree tree)
         graph (build-graph flat-tree)]
     graph))
