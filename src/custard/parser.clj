@@ -72,6 +72,11 @@
                                    (:name parent)))
      :ctx (if (contains? node "kind") node parent)}))
 
+(defn create-mapped-here-links [node _]
+  {:node (update node "mapped-here"
+                 (fn [mapped-here]
+                   (mapv #(hash-map :name %) mapped-here)))})
+
 (defn build-tree [root data]
   (letfn [(build-node [name-segment data]
             (cond
@@ -91,7 +96,8 @@
       (-> tree
           (process-down normalize-kind nil)
           (process-down inject-name [])
-          (process-down inject-parent nil)))))
+          (process-down inject-parent nil)
+          (process-down create-mapped-here-links nil)))))
 
 (defn flatten-tree [node]
   (letfn [(collect-step [m node]
