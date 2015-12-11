@@ -17,14 +17,14 @@
 
 (def badge (om/factory Badge))
 
-(def kind->view
-  {"requirement" :requirements
-   "component" :components
-   "work-item" :work-items
-   "tag" :tags})
+(def kind->handler
+  {"requirement" :expanded-requirements
+   "component" :expanded-components
+   "work-item" :expanded-work-items
+   "tag" :expanded-tags})
 
 (defn node->route [{:keys [kind name]}]
-  {:handler (kind->view kind)
+  {:handler (kind->handler kind)
    :route-params {:state '?state
                   :node name}})
 

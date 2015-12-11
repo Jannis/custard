@@ -8,9 +8,18 @@
             [web.env :as env])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;;;; Initial state
+
+(def initial-state {})
+
+;;;; Parser
+
 (defmulti read om/dispatch)
 
 (defmulti mutate om/dispatch)
+
+(def parser
+  (om/parser {:read read :mutate mutate}))
 
 ;;;; CUSTARD data
 
@@ -66,10 +75,17 @@
   {:value {:keys [:view]}
    :action #(swap! state assoc :view view)})
 
-(def parser
-  (om/parser {:read read :mutate mutate}))
+(defmethod mutate 'app/expand-node
+  [{:keys [state]} _ {:keys [node]}]
+  {:value {:keys [node]}
+   :action #(swap! state assoc-in (conj node :ui/expanded) true)})
 
-(def initial-state {})
+(defmethod mutate 'app/toggle-node-expanded
+  [{:keys [state]} _ {:keys [node]}]
+  {:value {:keys [node]}
+   :action #(swap! state update-in (conj node :ui/expanded) not)})
+
+;;;; Remotes
 
 (defn merge-result-tree [a b]
   (letfn [(merge-tree [a b]
@@ -104,6 +120,8 @@
                       (when remote-cb
                         (remote-cb data merge-fn)))))))
 
+;;;; Reconciler
+
 (def reconciler
   (om/reconciler {:parser parser
                   :state initial-state
@@ -111,6 +129,8 @@
                   :send #(send-to-remotes remotes %1 %2)
                   :remotes (keys remotes)
                   :id-key :id}))
+
+;;;; Backend polling
 
 (defn start-polling []
   (go
