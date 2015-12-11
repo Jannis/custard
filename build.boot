@@ -43,7 +43,7 @@
                  [cljsjs/showdown "0.4.0-1"]
                  [com.cognitect/transit-cljs "0.8.232"]
                  [org.clojure/core.async "0.2.374"]
-                 [org.omcljs/om "1.0.0-alpha26"]])
+                 [org.omcljs/om "1.0.0-alpha28"]])
 
 (task-options!
  pom {:project 'custard
@@ -76,7 +76,7 @@
 (deftask build-production
   []
   (comp (less)
-        (cljs :optimizations :simple)
+        (cljs :optimizations :advanced)
         (aot :namespace '#{server.core})))
 
 (deftask run-production
