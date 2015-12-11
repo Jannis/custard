@@ -3,6 +3,7 @@
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [web.reconciler :refer [reconciler start-polling]]
+            [web.routing :as routing]
             [web.components.components :refer [Component components]]
             [web.components.header :refer [header]]
             [web.components.project :refer [Project project]]
@@ -34,10 +35,12 @@
       :view])
   Object
   (select-state [this ident]
-    (om/set-query! this {:params {:state ident}}))
+    (let [view (:view (om/props this))]
+      (routing/activate-route! view {:state (second ident)})))
 
   (select-view [this view]
-    (om/transact! this `[(app/set-view {:view ~view})]))
+    (let [state (:state (om/props this))]
+      (routing/activate-route! view {:state (:name state)})))
 
   (componentWillUpdate [this new-props new-state]
     (let [{:keys [state states]} new-props]
@@ -53,7 +56,8 @@
 
   (render [this]
     (dom/div #js {:className "app"}
-      (let [props (select-keys (om/props this) [:states :view :project])]
+      (let [props (select-keys (om/props this)
+                               [:state :states :view :project])]
         (header
           (om/computed props
                        {:select-state-fn #(.select-state this %)
@@ -88,4 +92,5 @@
 (defn run []
   (enable-console-print!)
   (om/add-root! reconciler App (gdom/getElement "app"))
+  (routing/start!)
   (start-polling))

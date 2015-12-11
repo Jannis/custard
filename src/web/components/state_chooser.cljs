@@ -32,8 +32,9 @@
   (render [this]
     (let [{:keys [state states]} (om/props this)]
       (dom/div #js {:className "state-chooser"}
-        (dom/select #js {:onChange #(.state-selected this %)}
-          (for [state states]
-            (state-chooser-item state)))))))
+        (dom/select #js {:value (:id state)
+                         :onChange #(.state-selected this %)}
+          (for [state' states]
+            (state-chooser-item state')))))))
 
 (def state-chooser (om/factory StateChooser))

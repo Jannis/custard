@@ -39,10 +39,11 @@
                  [ring-middleware-format "0.6.0"]
 
                  ;; Web app
+                 [bidi "1.23.1"]
+                 [cljsjs/showdown "0.4.0-1"]
                  [com.cognitect/transit-cljs "0.8.232"]
                  [org.clojure/core.async "0.2.374"]
-                 [org.omcljs/om "1.0.0-alpha26"]
-                 [cljsjs/showdown "0.4.0-1"]])
+                 [org.omcljs/om "1.0.0-alpha26"]])
 
 (task-options!
  pom {:project 'custard
