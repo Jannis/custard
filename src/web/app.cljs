@@ -19,13 +19,13 @@
   (query [this]
     `[;; CUSTARD data
       ({:state ~(om/get-query StateChooserItem)}
-       {:state ?state})
+       {:state ~'?state})
       {:states ~(om/get-query StateChooserItem)}
-      ({:project ~(om/get-query Project)} {:state ?state})
-      ({:requirements ~(om/get-query Node)} {:state ?state})
-      ({:components ~(om/get-query Node)} {:state ?state})
-      ({:work-items ~(om/get-query Node)} {:state ?state})
-      ({:tags ~(om/get-query Node)} {:state ?state})
+      ({:project ~(om/get-query Project)} {:state ~'?state})
+      ({:requirements ~(om/get-query Node)} {:state ~'?state})
+      ({:components ~(om/get-query Node)} {:state ~'?state})
+      ({:work-items ~(om/get-query Node)} {:state ~'?state})
+      ({:tags ~(om/get-query Node)} {:state ~'?state})
 
       ;; UI state
       :view])
