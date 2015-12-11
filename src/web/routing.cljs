@@ -37,8 +37,25 @@
                                              :route-params
                                              {:state "UNCOMMITTED"}}})))
 
-(defn activate-route! [handler params]
-  (let [params' (cond-> params
-                  (contains? params :state)
-                  (update :state str/replace #"/" ":"))]
-    (set-location! @router {:handler handler :route-params params'})))
+(defn current-state-name []
+  (let [app (om/app-root reconciler)]
+    (second (:state (om/get-params app)))))
+
+(defn bind-params [params]
+  (letfn [(bind-param [res [key value]]
+            (assoc res key
+                   (if (symbol? value)
+                     (case value
+                       '?state (current-state-name)
+                       value)
+                     value)))]
+    (reduce bind-param {} params)))
+
+(defn activate-route!
+  ([route]
+   (activate-route! (:handler route) (:route-params route)))
+  ([handler params]
+   (let [params' (cond-> (bind-params params)
+                   (contains? params :state)
+                   (update :state str/replace #"/" ":"))]
+     (set-location! @router {:handler handler :route-params params'}))))
