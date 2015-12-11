@@ -1,6 +1,7 @@
 (ns web.components.node-link
   (:require [om.next :as om :refer-macros [defui]]
-            [om.dom :as dom]))
+            [om.dom :as dom]
+            [web.routing :as routing]))
 
 (defui Badge
   Object
@@ -16,6 +17,17 @@
 
 (def badge (om/factory Badge))
 
+(def kind->view
+  {"requirement" :requirements
+   "component" :components
+   "work-item" :work-items
+   "tag" :tags})
+
+(defn node->route [{:keys [kind name]}]
+  {:handler (kind->view kind)
+   :route-params {:state '?state
+                  :node name}})
+
 (defui NodeLink
   static om/Ident
   (ident [this props]
@@ -25,8 +37,10 @@
     [:name :title :kind])
   Object
   (render [this]
-    (let [{:keys [name title kind]} (om/props this)]
-      (dom/div #js {:className "node-link"}
+    (let [{:keys [name title kind]} (om/props this)
+          route (node->route (om/props this))]
+      (dom/a #js {:onClick #(routing/activate-route! route)
+                  :className "node-link"}
         (badge {:kind kind})
         (dom/span #js {:className "node-link-title"} title)
         (dom/span #js {:className "node-link-name"} name)))))
