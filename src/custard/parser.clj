@@ -25,6 +25,14 @@
 (defn path->segments [path]
   (fs/split (strip-extension path)))
 
+;;;; Node idents and links
+
+(defn node->ident [node]
+  [:node (:name node)])
+
+(defn node->link [node]
+  {:name (:name node)})
+
 ;;;; Parsing
 
 (defn parse-common [data]
@@ -122,11 +130,7 @@
             (:children node))))
 
 (defn build-graph [flat-tree]
-  (letfn [(node->ident [node]
-            [:node (:name node)])
-          (node->link [node]
-            {:name (:name node)})
-          (parse-node [graph node]
+  (letfn [(parse-node [graph node]
             (let [ident (node->ident node)
                   child-links (mapv node->link (:children node))
                   linked-node (assoc node :children child-links)]
@@ -145,12 +149,23 @@
 (defn merge-file-data [m [path data]]
   (update-in m (path->segments path) recursive-merge data))
 
+(defn create-mapped-to-links [graph]
+  (letfn [(lookup-mapped-to [graph ident]
+            (let [nodes (mapv #(get-in graph %) (:nodes graph))]
+              (filterv #(some #{ident} (:mapped-here %)) nodes)))
+          (create-mapped-to [graph ident]
+            (let [node (get-in graph ident)
+                  link (node->link node)
+                  targets (lookup-mapped-to graph link)]
+              (assoc-in graph (conj ident :mapped-to) targets)))]
+    (reduce create-mapped-to graph (:nodes graph))))
+
 (defn process-files [path->data]
   (let [data (reduce merge-file-data {} path->data)
         tree (parse-tree data)
         flat-tree (flatten-tree tree)
         graph (build-graph flat-tree)]
-    graph))
+    (create-mapped-to-links graph)))
 
 (defn parse-yaml [data]
   (try
