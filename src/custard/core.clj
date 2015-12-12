@@ -4,6 +4,8 @@
             [gitiom.repo :as git-repo]
             [juxt.dirwatch :refer [watch-dir close-watcher]]
             [me.raynes.fs :as fs]
+            [custard.files :refer [load-files-from-dir
+                                   load-files-from-commit]]
             [custard.parser :refer [parse-commit parse-uncommitted]]))
 
 ;;;; Protocols
@@ -13,7 +15,8 @@
   (requirements [this])
   (components [this])
   (work-items [this])
-  (tags [this]))
+  (tags [this])
+  (file [this path]))
 
 (defprotocol ICustard
   (states [this])
@@ -21,7 +24,7 @@
 
 ;;;; State representation
 
-(defrecord State [id name type graph]
+(defrecord State [id name type graph files]
   IState
   (project [this]
     (first (into []
@@ -47,13 +50,16 @@
     (into []
           (comp (map #(get-in graph %))
                 (filter #(= "tag" (:kind %))))
-          (:nodes graph))))
+          (:nodes graph)))
+  (file [this path]
+    (files path)))
 
 ;;;; The uncommitted state (working directory)
 
 (defn uncommitted-state [dir]
-  (let [graph (parse-uncommitted dir)]
-    (State. "UNCOMMITTED" "UNCOMMITTED" :none graph)))
+  (let [graph (parse-uncommitted dir)
+        files (load-files-from-dir dir)]
+    (State. "UNCOMMITTED" "UNCOMMITTED" :none graph files)))
 
 ;;;; Branch and tag states
 
@@ -65,7 +71,10 @@
                     (:type ref)
                     (if (:head ref)
                       (parse-commit repo (:head ref))
-                      [])))
+                      [])
+                    (if (:head ref)
+                      (load-files-from-commit repo (:head ref))
+                      {})))
           refs)))
 
 ;;;; Default Custard implementation

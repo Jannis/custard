@@ -9,6 +9,7 @@
             [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
             [om.next.server :as om]
+            [pantomime.mime :refer [mime-type-of]]
             [ring.util.response :refer [content-type
                                         header
                                         response
@@ -18,6 +19,7 @@
             [ring.middleware.format-response
              :refer [wrap-transit-json-response]]
             [reloaded.repl :refer [system]]
+            [custard.core :as c]
             [server.middleware :refer [wrap-access-headers]]
             [server.parser :refer [parser]]))
 
@@ -63,12 +65,23 @@
     (-> (response svg)
         (content-type "image/svg+xml"))))
 
+(defn handle-file [state path]
+  (let [state (c/state (:custard system) state)
+        stream (some-> state (c/file path))
+        mime-type (mime-type-of path)]
+    (when stream
+      (-> (response stream)
+          (content-type mime-type)))))
+
 (defroutes backend-routes
-  (OPTIONS "/query"     {params :body-params} (handle-query params))
-  (POST    "/query"     {params :body-params} (handle-query params))
-  (OPTIONS "/echo"      {params :body-params} (handle-echo params))
-  (POST    "/echo"      {params :body-params} (handle-echo params))
-  (GET     "/uml/:data" [data] (handle-uml data))
+  (OPTIONS "/query" {params :body-params} (handle-query params))
+  (POST    "/query" {params :body-params} (handle-query params))
+  (OPTIONS "/echo"  {params :body-params} (handle-echo params))
+  (POST    "/echo"  {params :body-params} (handle-echo params))
+
+  (GET     "/uml/:data"         [data]       (handle-uml data))
+  (GET     "/file/:state/:path" [state path] (handle-file state path))
+
   (route/not-found "Not found"))
 
 (defn make-om-transit-decoder []

@@ -6,21 +6,13 @@
             [gitiom.commit :as git-commit]
             [gitiom.repo :as git-repo]
             [gitiom.tree :as git-tree]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [custard.files :refer [relative-path]]))
 
 ;;;; Path utilities
 
 (defn strip-extension [path]
   (last (first (re-seq #"(.*)\..*$" path))))
-
-(defn relative-path [root path]
-  (let [root-segments (fs/split root)
-        path-segments (fs/split path)
-        n (count root-segments)]
-    (str/join "/"
-              (condp = (take n path-segments)
-                root-segments (drop n path-segments)
-                path-segments))))
 
 (defn path->segments [path]
   (fs/split (strip-extension path)))

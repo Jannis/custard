@@ -29,6 +29,7 @@
 
                  ;; Server
                  [com.cognitect/transit-clj "0.8.285"]
+                 [com.novemberain/pantomime "2.8.0"]
                  [compojure "1.4.0"]
                  [environ "1.0.1"]
                  [http-kit "2.1.19"]
@@ -65,7 +66,10 @@
         (system :sys #'development-system
                 :auto-start true
                 :hot-reload true
-                :files ["core.clj" "handler.clj" "parser.clj"])
+                :files ["core.clj"
+                        "files.clj"
+                        "handler.clj"
+                        "parser.clj"])
         (reload :on-jsload 'web.app/run)
         (cljs-repl)
         (less)
