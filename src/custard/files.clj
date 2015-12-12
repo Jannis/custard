@@ -1,6 +1,6 @@
 (ns custard.files
   (:import [gitiom.tree Tree]
-           [java.io ByteArrayInputStream])
+           [java.io ByteArrayInputStream FileInputStream])
   (:require [clojure.string :as str]
             [gitiom.coerce :refer [to-oid]]
             [gitiom.blob :as git-blob]
@@ -23,8 +23,13 @@
     (->> dir
          (tree-seq branch? #(.listFiles %))
          (filter include?)
-         (map #(vector (relative-path dir %) %))
+         (map #(vector (relative-path dir %)
+                       (FileInputStream. %)))
          (into {}))))
+
+(defn load-file-from-dir [dir path]
+  (let [files (load-files-from-dir dir)]
+    (files path)))
 
 (defn load-files-from-commit [repo commit]
   (let [tree (git-commit/tree repo commit)
@@ -64,3 +69,8 @@
          (filter blob?)
          (map #(vector (:path %) (ByteArrayInputStream. (:data %))))
          (into {}))))
+
+(defn load-file-from-commit [repo commit path]
+  (when commit
+    (let [files (load-files-from-commit repo commit)]
+      (files path))))
