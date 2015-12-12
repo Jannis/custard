@@ -19,6 +19,8 @@
      {:children '...}
      {:mapped-here (om/get-query NodeLink)}
      {:mapped-to (om/get-query NodeLink)}
+     {:tags (om/get-query NodeLink)}
+     {:tagged (om/get-query NodeLink)}
      :ui/expanded])
   Object
   (toggle-expanded [this]
@@ -40,7 +42,8 @@
 
   (render [this]
     (let [{:keys [name title kind description children
-                  mapped-to mapped-here ui/expanded]} (om/props this)
+                  mapped-to mapped-here tags tagged
+                  ui/expanded]} (om/props this)
           {:keys [parent]} (om/get-computed this)]
       (dom/div #js {:className
                     (str "node"
@@ -74,7 +77,7 @@
                   "Parent")
                 (dom/div #js {:className "node-detail-content"}
                   (node-link parent))))
-            (when-not (= kind "requirement")
+            (when (some #{kind} ["component" "work-item"])
               (dom/div #js {:className "node-detail"}
                 (dom/div #js {:className "node-detail-label"}
                   "Mapped here")
@@ -87,7 +90,7 @@
                              "mapped here yet.")))
                     (for [source mapped-here]
                       (node-link source))))))
-            (when-not (some #{kind} ["work-item" "tag"])
+            (when (some #{kind} ["requirement" "component"])
               (dom/div #js {:className "node-detail"}
                 (dom/div #js {:className "node-detail-label"}
                   "Mapped to")
@@ -99,7 +102,24 @@
                              "work items yet.")
                         (str "Not mapped to any work items yet.")))
                     (for [target mapped-to]
-                      (node-link target))))))))
+                      (node-link target))))))
+            (when-not (or (= "tag" kind)
+                          (empty? tags))
+              (dom/div #js {:className "node-detail"}
+                (dom/div #js {:className "node-detail-label"}
+                  "Tags")
+                (dom/div #js {:className "node-detail-content"}
+                  (for [target tags]
+                    (node-link target)))))
+            (when (= "tag" kind)
+              (dom/div #js {:className "node-detail"}
+                (dom/div #js {:className "node-detail-label"}
+                  "Tagged")
+                (dom/div #js {:className "node-detail-content"}
+                  (if (empty? tagged)
+                    "Nothing has been tagged with this yet."
+                    (for [source tagged]
+                      (node-link source))))))))
         (dom/div #js {:className "node-subnodes"}
           (for [child children]
             (node

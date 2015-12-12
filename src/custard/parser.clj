@@ -157,15 +157,34 @@
             (let [node (get-in graph ident)
                   link (node->link node)
                   targets (lookup-mapped-to graph link)]
-              (assoc-in graph (conj ident :mapped-to) targets)))]
+              (assoc-in graph
+                        (conj ident :mapped-to)
+                        (mapv node->link targets))))]
     (reduce create-mapped-to graph (:nodes graph))))
+
+(defn create-tagged-links [graph]
+  (letfn [(lookup-tag [graph link]
+            (let [nodes (mapv #(get-in graph %) (:nodes graph))]
+              (filterv #(some #{link} (:tags %)) nodes)))
+          (create-tagged [graph ident]
+            (let [node (get-in graph ident)]
+              (if (= "tag" (:kind node))
+                (let [link (node->link node)
+                      sources (lookup-tag graph link)]
+                  (assoc-in graph
+                            (conj ident :tagged)
+                            (mapv node->link sources)))
+                graph)))]
+    (reduce create-tagged graph (:nodes graph))))
 
 (defn process-files [path->data]
   (let [data (reduce merge-file-data {} path->data)
         tree (parse-tree data)
         flat-tree (flatten-tree tree)
         graph (build-graph flat-tree)]
-    (create-mapped-to-links graph)))
+    (-> graph
+        create-mapped-to-links
+        create-tagged-links)))
 
 (defn parse-yaml [data]
   (try
