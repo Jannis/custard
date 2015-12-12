@@ -4,7 +4,7 @@
             [om.dom :as dom]
             [web.reconciler :refer [reconciler start-polling]]
             [web.routing :as routing]
-            [web.components.nodes :refer [Node nodes]]
+            [web.components.nodes :refer [Node nodes sort-nodes]]
             [web.components.header :refer [header]]
             [web.components.project :refer [Project project]]
             [web.components.state-chooser :refer [StateChooserItem]]))
@@ -60,7 +60,8 @@
                         :select-view-fn #(.select-view this %)})))
       (dom/main nil
         (letfn [(render-nodes [view]
-                  (nodes {:nodes (get (om/props this) view)}))]
+                  (let [nodes' (get (om/props this) view)]
+                    (nodes {:nodes (sort-nodes nodes')})))]
           (condp = (:view (om/props this))
             :project
             (let [project' (:project (om/props this))]

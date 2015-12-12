@@ -6,6 +6,16 @@
                                               node->route]]
             [web.routing :as routing]))
 
+(defn sort-nodes [nodes]
+  (letfn [(kind-index [node]
+            (.indexOf #js ["requirement"
+                           "component"
+                           "work-item"
+                           "tag"]
+                      (:kind node)))]
+    (let [sort-key (juxt kind-index :name)]
+      (sort-by #(compare (sort-key %1) (sort-key %2)) nodes))))
+
 (declare node)
 
 (defui Node
@@ -83,8 +93,7 @@
                       "No requirements have been mapped here yet."
                       (str "No requirements or components have been "
                            "mapped here yet.")))
-                  (for [source mapped-here]
-                    (node-link source)))))
+                  (map node-link (sort-nodes mapped-here)))))
             (when (some #{kind} ["requirement" "component"])
               (.render-detail this "Mapped to"
                 (if (empty? mapped-to)
@@ -93,16 +102,14 @@
                       (str "Not mapped to any components or "
                            "work items yet.")
                       (str "Not mapped to any work items yet.")))
-                  (for [target mapped-to]
-                    (node-link target)))))
+                  (map node-link (sort-nodes mapped-to)))))
             (when-not (or (= "tag" kind) (empty? tags))
               (.render-detail this "Tags" (mapv node-link tags)))
             (when (= "tag" kind)
               (.render-detail this "Tagged"
                 (if (empty? tagged)
                   "Nothing has been tagged with this yet."
-                  (for [source tagged]
-                    (node-link source)))))))
+                  (map node-link (sort-nodes tagged)))))))
         (dom/div #js {:className "node-subnodes"}
           (for [child children]
             (node
