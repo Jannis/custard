@@ -35,12 +35,9 @@
 
 (defn handle-query [params]
   (let [ret (parser {:custard (:custard system)} params)]
-    (println ">>" ret)
     (response ret)))
 
 (defn handle-echo [params]
-  (println "<<" params (type params))
-  (println ">>" params)
   (response params))
 
 (defn generate-uml-svg [uml]
