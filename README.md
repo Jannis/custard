@@ -25,6 +25,11 @@ cd custard
 CUSTARD_PATH=~/your-project boot run-development
 ```
 
+### Open CUSTARD in the browser
+
+Then point your browser to `http://localhost:3000` and you should
+be good to go!
+
 ## License
 
 Copyright (C) 2015 Jannis Pohlmann.
