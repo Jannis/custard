@@ -29,6 +29,15 @@
     (let [route (node->route (om/props this))]
       (routing/activate-route! route)))
 
+  (satisfied? [this]
+    (let [{:keys [kind mapped-here mapped-to]} (om/props this)]
+      (case kind
+        "requirement" (not (empty? mapped-to))
+        "component" (and (not (empty? mapped-here))
+                         (not (empty? mapped-to)))
+        "work-item" (not (empty? mapped-here))
+        "tag" true)))
+
   (render [this]
     (let [{:keys [name title kind description children
                   mapped-to mapped-here ui/expanded]} (om/props this)
@@ -37,8 +46,7 @@
                     (str "node"
                          (when-not parent
                            " node-root")
-                         (if (or (some #{kind} ["work-item" "tag"])
-                                 (not (empty? mapped-to)))
+                         (if (.satisfied? this)
                            " node-satisfied"
                            " node-unsatisfied"))}
         (dom/h2 #js {:className "node-header"}
