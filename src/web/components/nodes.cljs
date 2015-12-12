@@ -40,6 +40,11 @@
         "work-item" (not (empty? mapped-here))
         "tag" true)))
 
+  (render-detail [this label content]
+    (dom/div #js {:className "node-detail"}
+      (dom/div #js {:className "node-detail-label"} label)
+      (dom/div #js {:className "node-detail-content"} content)))
+
   (render [this]
     (let [{:keys [name title kind description children
                   mapped-to mapped-here tags tagged
@@ -66,60 +71,38 @@
                              " node-details-collapsed"))}
           (dom/div #js {:className "node-details-table"}
             (when description
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Description")
-                (dom/div #js {:className "node-detail-content"}
-                  (markdown {:text description}))))
+              (let [text {:text description}]
+                (.render-detail this "Description" (markdown text))))
             (when parent
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Parent")
-                (dom/div #js {:className "node-detail-content"}
-                  (node-link parent))))
+              (.render-detail this "Parent" (node-link parent)))
             (when (some #{kind} ["component" "work-item"])
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Mapped here")
-                (dom/div #js {:className "node-detail-content"}
-                  (if (empty? mapped-here)
-                    (dom/div #js {:className "error"}
-                      (if (= "component" kind)
-                        "No requirements have been mapped here yet."
-                        (str "No requirements or components have been "
-                             "mapped here yet.")))
-                    (for [source mapped-here]
-                      (node-link source))))))
+              (.render-detail this "Mapped here"
+                (if (empty? mapped-here)
+                  (dom/div #js {:className "error"}
+                    (if (= "component" kind)
+                      "No requirements have been mapped here yet."
+                      (str "No requirements or components have been "
+                           "mapped here yet.")))
+                  (for [source mapped-here]
+                    (node-link source)))))
             (when (some #{kind} ["requirement" "component"])
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Mapped to")
-                (dom/div #js {:className "node-detail-content"}
-                  (if (empty? mapped-to)
-                    (dom/div #js {:className "error"}
-                      (if (= "requirement" kind)
-                        (str "Not mapped to any components or "
-                             "work items yet.")
-                        (str "Not mapped to any work items yet.")))
-                    (for [target mapped-to]
-                      (node-link target))))))
-            (when-not (or (= "tag" kind)
-                          (empty? tags))
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Tags")
-                (dom/div #js {:className "node-detail-content"}
-                  (for [target tags]
+              (.render-detail this "Mapped to"
+                (if (empty? mapped-to)
+                  (dom/div #js {:className "error"}
+                    (if (= "requirement" kind)
+                      (str "Not mapped to any components or "
+                           "work items yet.")
+                      (str "Not mapped to any work items yet.")))
+                  (for [target mapped-to]
                     (node-link target)))))
+            (when-not (or (= "tag" kind) (empty? tags))
+              (.render-detail this "Tags" (mapv node-link tags)))
             (when (= "tag" kind)
-              (dom/div #js {:className "node-detail"}
-                (dom/div #js {:className "node-detail-label"}
-                  "Tagged")
-                (dom/div #js {:className "node-detail-content"}
-                  (if (empty? tagged)
-                    "Nothing has been tagged with this yet."
-                    (for [source tagged]
-                      (node-link source))))))))
+              (.render-detail this "Tagged"
+                (if (empty? tagged)
+                  "Nothing has been tagged with this yet."
+                  (for [source tagged]
+                    (node-link source)))))))
         (dom/div #js {:className "node-subnodes"}
           (for [child children]
             (node
