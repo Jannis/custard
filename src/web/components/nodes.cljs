@@ -13,8 +13,7 @@
                            "work-item"
                            "tag"]
                       (:kind node)))]
-    (let [sort-key (juxt kind-index :name)]
-      (sort-by #(compare (sort-key %1) (sort-key %2)) nodes))))
+    (sort-by (juxt kind-index :title) nodes)))
 
 (declare node)
 
@@ -111,7 +110,7 @@
                   "Nothing has been tagged with this yet."
                   (map node-link (sort-nodes tagged)))))))
         (dom/div #js {:className "node-subnodes"}
-          (for [child children]
+          (for [child (sort-nodes children)]
             (node
               (om/computed child {:parent (om/props this)}))))))))
 
