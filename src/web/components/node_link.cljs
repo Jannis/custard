@@ -38,11 +38,15 @@
   Object
   (render [this]
     (let [{:keys [name title kind]} (om/props this)
-          route (node->route (om/props this))]
-      (dom/a #js {:onClick #(routing/activate-route! route)
-                  :className "node-link"}
-        (badge {:kind kind})
-        (dom/span #js {:className "node-link-title"} title)
-        (dom/span #js {:className "node-link-name"} name)))))
+          route (node->route (om/props this))
+          invalid? (not kind)]
+      (if invalid?
+        (dom/span #js {:className "error"}
+          (str "Invalid reference – " name))
+        (dom/a #js {:onClick #(routing/activate-route! route)
+                    :className (str "node-link")}
+               (badge {:kind kind})
+               (dom/span #js {:className "node-link-title"} title)
+               (dom/span #js {:className "node-link-name"} name))))))
 
 (def node-link (om/factory NodeLink {:key-fn :name}))
