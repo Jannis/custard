@@ -65,8 +65,9 @@
     (-> (response svg)
         (content-type "image/svg+xml"))))
 
-(defn handle-file [state path]
-  (let [state (c/state (:custard system) state)
+(defn handle-file [state-name path]
+  (let [state-name' (str/replace state-name #":" "/")
+        state (c/state (:custard system) state-name')
         stream (some-> state (c/file path))
         mime-type (mime-type-of path)]
     (when stream

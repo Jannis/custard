@@ -4,7 +4,8 @@
             [goog.crypt.base64 :as base64]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [web.env :as env]))
+            [web.env :as env]
+            [web.routing :refer [current-state-name]]))
 
 (defn base64-encode [data]
   (str/replace (base64/encodeString data)
@@ -21,8 +22,20 @@
                     url (str/join "/" [env/BACKEND_URL "uml" data])]
                 (str "[![UML](" url ")](" url ")")))}])
 
+(defn file-extension [converter]
+  #js [#js {:type "lang"
+            :regex "\\[(.+)\\]\\{(.+)\\}(@(.+))?"
+            :replace
+            (fn [s title path _ state]
+              (let [state (if state state (current-state-name))
+                    state' (str/replace state #"/" ":")
+                    url (str/join "/" [env/BACKEND_URL "file"
+                                       state' path])]
+                (str "[" title "](" url " \"" path "\")")))}])
+
 (def converter
-  (js/Showdown.converter. #js {:extensions #js [uml-extension]}))
+  (let [extensions #js [uml-extension file-extension]]
+    (js/Showdown.converter. #js {:extensions extensions})))
 
 (defui Markdown
   Object
