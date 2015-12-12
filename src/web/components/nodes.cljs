@@ -81,7 +81,10 @@
                 (dom/div #js {:className "node-detail-content"}
                   (if (empty? mapped-here)
                     (dom/div #js {:className "error"}
-                      "No requirements have been mapped here yet.")
+                      (if (= "component" kind)
+                        "No requirements have been mapped here yet."
+                        (str "No requirements or components have been "
+                             "mapped here yet.")))
                     (for [source mapped-here]
                       (node-link source))))))
             (when-not (some #{kind} ["work-item" "tag"])
@@ -91,7 +94,10 @@
                 (dom/div #js {:className "node-detail-content"}
                   (if (empty? mapped-to)
                     (dom/div #js {:className "error"}
-                      "Not mapped to any components yet.")
+                      (if (= "requirement" kind)
+                        (str "Not mapped to any components or "
+                             "work items yet.")
+                        (str "Not mapped to any work items yet.")))
                     (for [target mapped-to]
                       (node-link target))))))))
         (dom/div #js {:className "node-subnodes"}
