@@ -135,7 +135,7 @@
 (defn start-polling []
   (go
     (loop []
-      (<! (timeout 2000))
+      (<! (timeout 5000))
       (let [root (-> reconciler :state deref :root)
             query (om/get-query root)
             cfg (:config reconciler)
