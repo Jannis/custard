@@ -24,7 +24,7 @@
 
 (defn file-extension [converter]
   #js [#js {:type "lang"
-            :regex "\\[(.+)\\]\\{(.+)\\}(@(.+))?"
+            :regex "\\[(.+)\\]\\{(.+)\\}(@([^\\s]+))?"
             :replace
             (fn [s title path _ state]
               (let [state (if state state (current-state-name))
