@@ -1,10 +1,23 @@
-# CUSTARD
+# Custard
 
-[MUSTARD](http://github.com/CodethinkLabs/mustard) implemented in Clojure.
+An improved version of the requirements, architecture and work planning
+tool [MUSTARD](http://github.com/CodethinkLabs/mustard) implemented
+in Clojure.
 
-## Get started locally
+## Introduction
 
-### Create a CUSTARD repository
+TODO
+
+### Benefits
+
+* Developer-friendly - all it takes is a Git repository and a text editor
+* Standard code review workflows can be used for plans made with Custard
+
+## Usage
+
+### Get started locally
+
+**Create a Custard repository**
 
 ```
 mkdir ~/your-project
@@ -12,20 +25,18 @@ cd ~/your-project
 git init
 ```
 
-### Clone CUSTARD
+**Clone and start Custard**
+
+For this, you will need to install https://github.com/boot-clj/boot
+first.
 
 ```
 git clone https://github.com/jannis/custard
-```
-
-### Start CUSTARD
-
-```
 cd custard
-CUSTARD_PATH=~/your-project boot run-development
+Custard_PATH=~/your-project boot run-development
 ```
 
-### Open CUSTARD in the browser
+**Open Custard in the browser**
 
 Then point your browser to `http://localhost:3000` and you should
 be good to go!
