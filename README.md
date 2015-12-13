@@ -12,6 +12,8 @@ TODO
 
 * Developer-friendly - all it takes is a Git repository and a text editor
 * Standard code review workflows can be used for plans made with Custard
+* Bring external documents (whitepapers, specs, emails...) into version
+  control
 
 ## Usage
 
@@ -33,12 +35,12 @@ first.
 ```
 git clone https://github.com/jannis/custard
 cd custard
-Custard_PATH=~/your-project boot run-development
+CUSTARD_PATH=~/your-project boot run-development
 ```
 
 **Open Custard in the browser**
 
-Then point your browser to `http://localhost:3000` and you should
+Then point your browser to http://localhost:3000 and you should
 be good to go!
 
 ## License
