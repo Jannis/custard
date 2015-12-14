@@ -5,23 +5,19 @@
   (:require [clojure.core.memoize :as memoize]
             [clojure.data.codec.base64 :as base64]
             [clojure.string :as str]
-            [cognitect.transit :as transit]
             [compojure.core :refer [defroutes GET OPTIONS POST]]
             [compojure.route :as route]
-            [om.next.server :as om]
             [pantomime.mime :refer [mime-type-of]]
             [ring.util.response :refer [content-type
                                         header
                                         response
                                         resource-response]]
-            [ring.middleware.format-params
-             :refer [wrap-transit-json-params]]
-            [ring.middleware.format-response
-             :refer [wrap-transit-json-response]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
             [reloaded.repl :refer [system]]
+            [taoensso.sente :as sente]
             [custard.core :as c]
-            [server.middleware :refer [wrap-access-headers]]
-            [server.parser :refer [parser]]))
+            [server.middleware :refer [wrap-access-headers]]))
 
 ;;;; App server
 
@@ -35,12 +31,7 @@
 
 ;;;; Backend server
 
-(defn handle-query [params]
-  (let [ret (parser {:custard (:custard system)} params)]
-    (response ret)))
-
-(defn handle-echo [params]
-  (response params))
+;;; PlantUML service
 
 (defn generate-uml-svg [uml]
   (let [reader (SourceStringReader. uml)
@@ -65,6 +56,8 @@
     (-> (response svg)
         (content-type "image/svg+xml"))))
 
+;;; Versioned files service
+
 (defn handle-file [state-name path]
   (let [state-name' (str/replace state-name #":" "/")
         state (c/state (:custard system) state-name')
@@ -74,31 +67,26 @@
       (-> (response stream)
           (content-type mime-type)))))
 
-(defroutes backend-routes
-  (OPTIONS "/query" {params :body-params} (handle-query params))
-  (POST    "/query" {params :body-params} (handle-query params))
-  (OPTIONS "/echo"  {params :body-params} (handle-echo params))
-  (POST    "/echo"  {params :body-params} (handle-echo params))
+;;; Backend routes
 
-  (GET     "/uml/:data"         [data]       (handle-uml data))
-  (GET     "/file/:state/:path" [state path] (handle-file state path))
+(defn ajax-get-or-ws-handshake [req]
+  ((:ring-ajax-get-or-ws-handshake (:sente system)) req))
+
+(defn ajax-post [req]
+  ((:ring-ajax-post (:sente system)) req))
+
+(defroutes backend-routes
+  (GET  "/query"             req          (ajax-get-or-ws-handshake req))
+  (POST "/query"             req          (ajax-post req))
+  (GET  "/uml/:data"         [data]       (handle-uml data))
+  (GET  "/file/:state/:path" [state path] (handle-file state path))
 
   (route/not-found "Not found"))
 
-(defn make-om-transit-decoder []
-  (fn [in]
-    (transit/read (om/reader in))))
-
-(defn make-om-transit-encoder []
-  (fn [in]
-    (let [out (ByteArrayOutputStream.)]
-      (transit/write (om/writer out) in)
-      (.toByteArray out))))
+;;; Wiring it all up
 
 (def backend-server
   (-> backend-routes
-      (wrap-access-headers)
-      (wrap-transit-json-params :decoder (make-om-transit-decoder)
-                                :options {:verbose true})
-      (wrap-transit-json-response :encoder (make-om-transit-encoder)
-                                  :options {:verbose true})))
+      (wrap-keyword-params)
+      (wrap-params)
+      (wrap-access-headers)))

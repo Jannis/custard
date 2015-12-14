@@ -17,6 +17,7 @@
 
                  ;; General
                  [adzerk/env "0.2.0"]
+                 [com.taoensso/sente "1.7.0"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.170"]
 
