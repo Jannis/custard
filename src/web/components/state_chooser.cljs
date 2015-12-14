@@ -6,19 +6,19 @@
 (defui StateChooserItem
   static om/Ident
   (ident [this props]
-    [:state (:id props)])
+    [:state (:name props)])
   static om/IQuery
   (query [this]
-    [:id :name :type])
+    [:name :revision :type])
   Object
   (render [this]
-    (let [{:keys [id name type]} (om/props this)
+    (let [{:keys [name type]} (om/props this)
           prefixes #"refs/heads/|refs/remotes/|refs/tags/"]
-      (dom/option #js {:value id}
+      (dom/option #js {:value name}
         (condp = type :branch "b " :tag "t " " ")
         (str/replace name prefixes "")))))
 
-(def state-chooser-item (om/factory StateChooserItem {:keyfn :id}))
+(def state-chooser-item (om/factory StateChooserItem {:keyfn :name}))
 
 (defui StateChooser
   Object
@@ -32,7 +32,7 @@
   (render [this]
     (let [{:keys [state states]} (om/props this)]
       (dom/div #js {:className "state-chooser"}
-        (dom/select #js {:value (:id state)
+        (dom/select #js {:value (:name state)
                          :onChange #(.state-selected this %)}
           (for [state' states]
             (state-chooser-item state')))))))

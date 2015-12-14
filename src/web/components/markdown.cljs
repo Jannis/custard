@@ -5,7 +5,7 @@
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [web.env :as env]
-            [web.routing :refer [current-state-name]]))
+            [web.reconciler :refer [get-current-state]]))
 
 (defn base64-encode [data]
   (str/replace (base64/encodeString data)
@@ -27,7 +27,7 @@
             :regex "\\[(.+)\\]\\{(.+)\\}(@([^\\s]+))?"
             :replace
             (fn [s title path _ state]
-              (let [state (if state state (current-state-name))
+              (let [state (if state state (second (get-current-state)))
                     state' (str/replace state #"/" ":")
                     url (str/join "/" [env/BACKEND_URL "file"
                                        state' path])]

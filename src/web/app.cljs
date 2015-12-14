@@ -2,11 +2,11 @@
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [web.reconciler :refer [reconciler start-polling]]
+            [web.reconciler :refer [reconciler]]
+            [web.remote :as remote]
             [web.routing :as routing]
-            [web.components.nodes :refer [Node nodes sort-nodes]]
             [web.components.header :refer [header]]
-            [web.components.project :refer [Project project]]
+            [web.components.state :refer [State state]]
             [web.components.state-chooser :refer [StateChooserItem]]))
 
 (enable-console-print!)
@@ -18,14 +18,8 @@
   static om/IQuery
   (query [this]
     `[;; CUSTARD data
-      ({:state ~(om/get-query StateChooserItem)}
-       {:state ~'?state})
-      {:states ~(om/get-query StateChooserItem)}
-      ({:project ~(om/get-query Project)} {:state ~'?state})
-      ({:requirements ~(om/get-query Node)} {:state ~'?state})
-      ({:components ~(om/get-query Node)} {:state ~'?state})
-      ({:work-items ~(om/get-query Node)} {:state ~'?state})
-      ({:tags ~(om/get-query Node)} {:state ~'?state})
+      {:custard/states ~(om/get-query StateChooserItem)}
+      ({:custard/state ~(om/get-query State)} {:state ~'?state})
 
       ;; UI state
       :view])
@@ -35,11 +29,11 @@
       (routing/activate-route! view {:state (second ident)})))
 
   (select-view [this view]
-    (let [state (:state (om/props this))]
+    (let [state (:custard/state (om/props this))]
       (routing/activate-route! view {:state (:name state)})))
 
   (componentWillUpdate [this new-props new-state]
-    (let [{:keys [state states]} new-props]
+    (let [{:keys [custard/state custard/states]} new-props]
       (if (and (nil? state)
                (not (empty? states)))
         (let [get-fn (fn [id] (first (filter #(= id (:id %)) states)))
@@ -52,31 +46,20 @@
 
   (render [this]
     (dom/div #js {:className "app"}
-      (let [props (select-keys (om/props this)
-                               [:state :states :view :project])]
+      (let [header-props [:custard/state :custard/states :View]]
         (header
-          (om/computed props
+          (om/computed (select-keys (om/props this) header-props)
                        {:select-state-fn #(.select-state this %)
                         :select-view-fn #(.select-view this %)})))
       (dom/main nil
-        (letfn [(render-nodes [view]
-                  (let [nodes' (get (om/props this) view)]
-                    (nodes {:nodes (sort-nodes nodes')})))]
-          (condp = (:view (om/props this))
-            :project
-            (let [project' (:project (om/props this))]
-              (if (and (not (nil? project'))
-                       (not (empty? project')))
-                (project project')
-                (dom/div nil "Start by defining a project.")))
-            :requirements (render-nodes :requirements)
-            :components (render-nodes :components)
-            :work-items (render-nodes :work-items)
-            :tags (render-nodes :tags)
-            (dom/div nil "Nothing selected.")))))))
+        (let [custard-state (:custard/state (om/props this))
+              view (:view (om/props this))]
+          (if custard-state
+            (state (om/computed custard-state {:view view}))
+            (dom/div nil "Loading...")))))))
 
 (defn run []
   (enable-console-print!)
   (om/add-root! reconciler App (gdom/getElement "app"))
   (routing/start!)
-  (start-polling))
+  (remote/start-sente-event-handler! reconciler))

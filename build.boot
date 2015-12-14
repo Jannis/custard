@@ -42,6 +42,7 @@
 
                  ;; Web app
                  [bidi "1.23.1"]
+                 [com.cemerick/url "0.1.1"]
                  [cljsjs/showdown "0.4.0-1"]
                  [com.cognitect/transit-cljs "0.8.232"]
                  [org.clojure/core.async "0.2.374"]

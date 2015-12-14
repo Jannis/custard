@@ -3,7 +3,7 @@
             [bidi.router :refer [set-location! start-router!]]
             [clojure.string :as str]
             [om.next :as om]
-            [web.reconciler :refer [reconciler]]))
+            [web.reconciler :refer [reconciler get-current-state]]))
 
 (enable-console-print!)
 
@@ -28,11 +28,12 @@
 
 (defn navigate-to [location]
   (let [view (:handler location)
-        state (str/replace (:state (:route-params location)) #":" "/")
+        name (str/replace (:state (:route-params location)) #":" "/")
+        state [:state name]
         nodes (str/split (:node (:route-params location)) #",")
         app (om/app-root reconciler)]
     (when (and app state)
-      (om/set-query! app {:params {:state [:state state]}}))
+      (om/set-query! app {:params {:state state}}))
     (when view
       (om/transact! reconciler `[(app/set-view {:view ~view})]))
     (when-not (empty? nodes)
@@ -51,16 +52,12 @@
                                              :route-params
                                              {:state "UNCOMMITTED"}}})))
 
-(defn current-state-name []
-  (let [app (om/app-root reconciler)]
-    (second (:state (om/get-params app)))))
-
 (defn bind-params [params]
   (letfn [(bind-param [res [key value]]
             (assoc res key
                    (if (symbol? value)
                      (case value
-                       '?state (current-state-name)
+                       '?state (second (get-current-state))
                        value)
                      value)))]
     (reduce bind-param {} params)))

@@ -21,7 +21,7 @@
 (defui Header
   Object
   (render [this]
-    (let [{:keys [state states view project]} (om/props this)
+    (let [{:keys [custard/state custard/states view]} (om/props this)
           {:keys [select-state-fn
                   select-view-fn]} (om/get-computed this)]
       (dom/header #js {:className "header"}
@@ -29,9 +29,9 @@
           (dom/h1 #js {:className "header-title-text"
                        :onClick #(when select-view-fn
                                    (select-view-fn :project))}
-            (if (and (not (nil? project))
-                     (contains? project :title))
-              (:title project)
+            (if (and (not (nil? (:project state)))
+                     (contains? (:project state) :title))
+              (:title (:project state))
               "CUSTARD"))
           (dom/nav #js {:className "header-title-nav"}
             (state-chooser {:state state

@@ -1,12 +1,7 @@
 (ns web.reconciler
-  (:import [goog.net XhrIo])
-  (:require [cljs.core.async :refer [<! timeout]]
-            [clojure.string :as str]
-            [cognitect.transit :as transit]
-            [om.next :as om]
+  (:require [om.next :as om]
             [om.next.protocols :as om-protocols]
-            [web.env :as env])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [web.remote :as remote]))
 
 ;;;; Initial state
 
@@ -23,49 +18,23 @@
 
 ;;;; CUSTARD data
 
+(defn go-remote? [st params]
+  (let [current-state (:custard/state st)]
+    (not= (:state params) current-state)))
+
 (def db->tree-cached (memoize om/db->tree))
 
-(defmethod read :states
+(defmethod read :custard/states
   [{:keys [state query]} key _]
   (let [st @state]
     {:value (db->tree-cached query (get st key) st)
-     :remote true}))
+     :remote (empty? (:custard/states st))}))
 
-(defmethod read :state
-  [{:keys [state query]} key params]
-  {:value (get-in @state (:state params))
-   :remote true})
-
-(defmethod read :project
-  [{:keys [state query]} key params]
+(defmethod read :custard/state
+  [{:keys [force-remotes? query state] :as env} key params]
   (let [st @state]
     {:value (db->tree-cached query (get st key) st)
-     :remote true}))
-
-(defmethod read :requirements
-  [{:keys [state query]} key params]
-  (println "read :requirements")
-  (let [st @state]
-    {:value (db->tree-cached query (get st key) st)
-     :remote true}))
-
-(defmethod read :components
-  [{:keys [state query]} key params]
-  (let [st @state]
-    {:value (db->tree-cached query (get st key) st)
-     :remote true}))
-
-(defmethod read :tags
-  [{:keys [state query]} key params]
-  (let [st @state]
-    {:value (db->tree-cached query (get st key) st)
-     :remote true}))
-
-(defmethod read :work-items
-  [{:keys [state query]} key params]
-  (let [st @state]
-    {:value (db->tree-cached query (get st key) st)
-     :remote true}))
+     :remote (or force-remotes? (go-remote? st params))}))
 
 ;;;; UI state
 
@@ -97,54 +66,14 @@
               b))]
     (merge-tree a b)))
 
-(defn merge-remote [results merge-fn]
-  (merge-fn results))
-
-(def remotes
-  {:remote {:url (str/join "/" [env/BACKEND_URL "query"])
-            :callback merge-remote}})
-
-(defn- transit-post [url data cb]
-  (.send XhrIo url
-         (fn [e]
-           (this-as this
-             (cb (transit/read (om.transit/reader)
-                               (.getResponseText this)))))
-         "POST"
-         (transit/write (om.transit/writer) data)
-         #js {"Content-Type" "application/transit+json"}))
-
-(defn send-to-remotes [remotes sends merge-fn]
-  (doseq [[remote query] sends]
-    (transit-post (get-in remotes [remote :url])
-                  query
-                  (fn [data]
-                    (let [remote-cb (get-in remotes [remote :callback])]
-                      (when remote-cb
-                        (remote-cb data merge-fn)))))))
-
 ;;;; Reconciler
 
 (def reconciler
   (om/reconciler {:parser parser
                   :state initial-state
                   :merge-tree merge-result-tree
-                  :send #(send-to-remotes remotes %1 %2)
-                  :remotes (keys remotes)
+                  :send remote/send-to-remote
                   :id-key :id}))
 
-;;;; Backend polling
-
-(defn start-polling []
-  (go
-    (loop []
-      (<! (timeout 5000))
-      (let [root (-> reconciler :state deref :root)
-            query (om/get-query root)
-            cfg (:config reconciler)
-            remotes (:remotes cfg)
-            sends (om/gather-sends cfg query remotes)]
-        (when-not (empty? sends)
-          (om-protocols/queue-sends! reconciler sends)
-          (om/schedule-sends! reconciler)))
-      (recur))))
+(defn get-current-state []
+  (:custard/state @reconciler))
