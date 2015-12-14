@@ -34,9 +34,11 @@
 
   (componentWillUpdate [this new-props new-state]
     (let [{:keys [custard/state custard/states]} new-props]
-      (if (and (nil? state)
-               (not (empty? states)))
-        (let [get-fn (fn [id] (first (filter #(= id (:id %)) states)))
+      (when (and (empty? state)
+                 (not (empty? states)))
+        (println "Need to try a different state")
+        (println states)
+        (let [get-fn (fn [name] (first (filter #(= name (:name %)) states)))
               head (get-fn "HEAD")
               master (get-fn "refs/heads/master")]
           (cond
