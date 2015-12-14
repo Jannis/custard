@@ -32,14 +32,12 @@
 ;;;; Merge remote data into Om
 
 (defn merge-remote [merge-fn results]
-  (println "merge-remote" (if (map? results) (keys results)))
   (if-not (= :chsk/closed results)
     (merge-fn results)))
 
 ;;;; Send to remote function for Om
 
 (defn send-to-remote [queries merge-fn]
-  (println "send-to-remote" (:remote queries))
   (put! ch-pending-queries {:queries queries :merge-fn merge-fn}))
 
 ;;;; Queue queries while backend is down, flush whenever possible
@@ -78,7 +76,6 @@
         new-state (->> states :custard/states
                        (filter #(= (:name state) (:name %)))
                        first)]
-    (println "old" (:revision state) "new" (:revision new-state))
     (if-not (= (:revision state) (:revision new-state))
       (refetch-root-query reconciler)))
   (om/merge! reconciler states))
@@ -97,7 +94,7 @@
 
 (defmethod sente-event-handler :default
   [reconciler {:keys [event]}]
-  (println "sente-event-handler :default -> unhandled event" event))
+  (println "Remote: unandled event" event))
 
 (defn connect! [reconciler]
   (start-flushing-pending-queries! reconciler)
