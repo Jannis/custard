@@ -23,10 +23,12 @@
 
 ;;;; CUSTARD data
 
+(def db->tree-cached (memoize om/db->tree))
+
 (defmethod read :states
   [{:keys [state query]} key _]
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 (defmethod read :state
@@ -37,31 +39,32 @@
 (defmethod read :project
   [{:keys [state query]} key params]
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 (defmethod read :requirements
   [{:keys [state query]} key params]
+  (println "read :requirements")
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 (defmethod read :components
   [{:keys [state query]} key params]
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 (defmethod read :tags
   [{:keys [state query]} key params]
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 (defmethod read :work-items
   [{:keys [state query]} key params]
   (let [st @state]
-    {:value (om/db->tree query (get st key) st)
+    {:value (db->tree-cached query (get st key) st)
      :remote true}))
 
 ;;;; UI state
