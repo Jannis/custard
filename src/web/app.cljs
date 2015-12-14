@@ -62,4 +62,4 @@
   (enable-console-print!)
   (om/add-root! reconciler App (gdom/getElement "app"))
   (routing/start!)
-  (remote/start-sente-event-handler! reconciler))
+  (remote/connect! reconciler))

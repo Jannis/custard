@@ -36,6 +36,15 @@
     {:value (db->tree-cached query (get st key) st)
      :remote (or force-remotes? (go-remote? st params))}))
 
+(defmethod read :custard/ready?
+  [{:keys [state]} key _]
+  {:value (boolean (get @state key))})
+
+(defmethod mutate 'custard/set-ready
+  [{:keys [state]} _ {:keys [ready?]}]
+  {:value {:keys [:custard/ready?]}
+   :action #(swap! state assoc :custard/ready? ready?)})
+
 ;;;; UI state
 
 (defmethod read :view

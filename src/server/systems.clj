@@ -1,5 +1,5 @@
 (ns server.systems
-  (:require [adzerk.env :as env] 
+  (:require [adzerk.env :as env]
             [taoensso.sente.server-adapters.http-kit
              :refer [sente-web-server-adapter]]
             [system.core :refer [defsystem]]

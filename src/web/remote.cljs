@@ -27,6 +27,8 @@
 (def chsk-send! (:send-fn socket))
 (def chsk-state (:state socket))
 
+(def ch-pending-queries (chan))
+
 ;;;; Merge remote data into Om
 
 (defn merge-remote [merge-fn results]
@@ -38,11 +40,23 @@
 
 (defn send-to-remote [queries merge-fn]
   (println "send-to-remote" (:remote queries))
-  (chsk-send! [:custard/query (:remote queries)]
-              5000
-              (partial merge-remote merge-fn)))
+  (put! ch-pending-queries {:queries queries :merge-fn merge-fn}))
 
 ;;;; Receive push updates from the server
+
+(defn start-flushing-pending-queries! [reconciler]
+  (go
+    (loop []
+      (if (:custard/ready? @reconciler)
+        (when-let [data (<! ch-pending-queries)]
+          (println "Remote: flush pending queries")
+          (chsk-send! [:custard/query (:remote (:queries data))]
+                      5000
+                      (partial merge-remote (:merge-fn data))))
+        (do
+          (println "Remote: waiting for connection")
+          (<! (timeout 500))))
+      (recur))))
 
 (defn refetch-root-query [reconciler]
   (let [app (om/app-root reconciler)
@@ -74,10 +88,16 @@
   (when ?data
     (receive-from-remote reconciler ?data)))
 
-(defmethod sente-event-handler :default
-  [reconciler msg]
-  (println "sente-event-handler :default" msg))
+(defmethod sente-event-handler :chsk/state
+  [reconciler {:keys [?data]}]
+  (when (and ?data (or (:open? ?data) (:first-open? ?data)))
+    (om/transact! reconciler `[(custard/set-ready {:ready? true})])))
 
-(defn start-sente-event-handler! [reconciler]
+(defmethod sente-event-handler :default
+  [reconciler {:keys [event]}]
+  (println "sente-event-handler :default -> unhandled event" event))
+
+(defn connect! [reconciler]
+  (start-flushing-pending-queries! reconciler)
   (sente/start-chsk-router!
     ch-chsk (partial sente-event-handler reconciler)))
