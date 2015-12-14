@@ -27,11 +27,58 @@
 
 ;;;; Parsing
 
+(def kind-aliases
+  {"project" ["project" "p"]
+   "requirement" ["requirement" "req" "r"]
+   "component" ["component" "comp" "c"]
+   "work-item" ["work-item" "work" "w"]
+   "tag" ["tag" "t"]})
+
+(defn parse-kind [kind]
+  (when-let [kind (cond-> kind (map? kind) (get "kind"))]
+    (ffirst (filter #(some #{kind} (second %)) kind-aliases))))
+
+(defn parse-markdown-data [data]
+  (let [text (or (data "description") (data "text") "")
+        lines (str/split-lines text)
+        title-pattern #"#\s+(([a-z]+):\s*)?(.*)"
+        tag-pattern #"\+([a-zA-Z0-9-_\/:]+)"]
+    (letfn [(parse-md-kind-and-title [res line]
+              (if-not (and (:kind res) (:title res))
+                (if-let [match (re-matches title-pattern line)]
+                  (let [[_ _ kind title] match]
+                    (let [res (-> res
+                                  (assoc :kind (parse-kind kind))
+                                  (assoc :title title))]
+                      res))
+                  (update res :lines conj line))
+                (update res :lines conj line)))
+            (parse-md-tags [res line]
+              (let [tags (map second (re-seq tag-pattern line))]
+                (-> res
+                    (dissoc :lines)
+                    (update :tags (comp distinct concat) tags))))
+            (parse-md-step [res line]
+              (merge (parse-md-kind-and-title res line)
+                     (parse-md-tags res line)))]
+      (let [res (reduce parse-md-step {} lines)
+            text (str/join "\n" (reverse (:lines res)))]
+        (-> res
+            (dissoc :lines)
+            (assoc :text text))))))
+
 (defn parse-common [data]
-  {:title (data "title")
-   :description (data "description")
-   :mapped-here (mapv #(hash-map :name %) (data "mapped-here"))
-   :tags (mapv #(hash-map :name %) (data "tags"))})
+  (let [markdown-data (parse-markdown-data data)]
+    {:title (or (data "title") (:title markdown-data))
+     :kind (or (parse-kind data) (:kind markdown-data))
+     :description (if (:title markdown-data)
+                    (:text markdown-data)
+                    (or (data "description")
+                        (data "text")))
+     :mapped-here (mapv #(hash-map :name %) (data "mapped-here"))
+     :tags (into []
+             (concat (mapv #(hash-map :name %) (data "tags"))
+                     (mapv #(hash-map :name %) (:tags markdown-data))))}))
 
 (defn parse-project [data]
   {:copyright (data "copyright")})
@@ -54,18 +101,6 @@
    "component" parse-component
    "work-item" parse-work-item
    "tag" parse-tag})
-
-(def kind-aliases
-  {"project" ["project"]
-   "requirement" ["requirement" "req" "r"]
-   "component" ["component" "comp" "c"]
-   "work-item" ["work-item" "work" "w"]
-   "tag" ["tag" "t"]})
-
-(defn parse-kind [data]
-  (when (contains? data "kind")
-    (when-let [kind (get data "kind")]
-      (ffirst (filter #(some #{kind} (second %)) kind-aliases)))))
 
 (defn custard-node? [node]
   (contains? node :kind))
@@ -91,17 +126,16 @@
 
 (defn parse-nodes [name-segments parent-name data]
   {:pre [(map? data)]}
-  (let [kind (parse-kind data)
-        parser (kind-parsers kind)]
-    (if (and kind parser)
+  (let [common (parse-common data)
+        parser (kind-parsers (:kind common))]
+    (if (and (:kind common) parser)
       (let [name (str/join "/" name-segments)
             basic {:name name
                    :parent parent-name
                    :children (parse-children name-segments name data)}]
         [(merge basic
-                 {:kind kind}
-                 (parse-common data)
-                 (parser data))])
+                (parse-common data)
+                (parser data))])
       (parse-children name-segments parent-name data))))
 
 (defn parse-tree [data]
