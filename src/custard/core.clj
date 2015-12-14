@@ -20,11 +20,11 @@
 
 (defprotocol ICustard
   (states [this])
-  (state [this id]))
+  (state [this name]))
 
 ;;;; State representation
 
-(defrecord State [id name type graph load-file-fn]
+(defrecord State [name revision type graph load-file-fn]
   IState
   (project [this]
     (first (into []
@@ -57,57 +57,52 @@
 ;;;; The uncommitted state (working directory)
 
 (defn uncommitted-state [dir]
-  (let [graph (parse-uncommitted dir)]
-    (State. "UNCOMMITTED"
-            "UNCOMMITTED"
-            :none
-            graph
-            #(load-file-from-dir dir %))))
+  (map->State {:name "UNCOMMITTED"
+               :revision (new java.util.Date)
+               :type :none
+               :graph (parse-uncommitted dir)
+               :load-file-fn #(load-file-from-dir dir %)}))
 
 ;;;; Branch and tag states
 
 (defn ref-states [repo]
   (let [refs (git-ref/load-all repo)]
     (mapv (fn [ref]
-            (State. (:name ref)
-                    (:name ref)
-                    (:type ref)
-                    (if (:head ref)
-                      (parse-commit repo (:head ref))
-                      [])
-                    #(load-file-from-commit repo (:head ref) %)))
+            (map->State {:name (:name ref)
+                         :revision (:sha1 (:head ref))
+                         :type (:type ref)
+                         :graph (if (:head ref)
+                                  (parse-commit repo (:head ref))
+                                  [])
+                         :load-file-fn
+                         #(load-file-from-commit repo (:head ref) %)}))
           refs)))
 
 ;;;; Default Custard implementation
 
-(defrecord Custard [dir repo watcher refs uncommitted]
+(defrecord Custard [dir repo watcher states-map]
   ICustard
   (states [this]
-    (if @uncommitted
-      (into [@uncommitted] @refs)
-      @refs))
+    (into [] (vals @states-map)))
 
-  (state [this id]
-    (if (= id "UNCOMMITTED")
-      @uncommitted
-      (first (filter #(= id (:id %)) (states this)))))
+  (state [this name]
+    (@states-map name))
 
   component/Lifecycle
   (start [this]
     (let [repo (git-repo/load dir)
           bare? (.isBare (.getRepository repo))]
-      (when-not bare?
-        (reset! uncommitted (uncommitted-state dir)))
-      (reset! refs (ref-states repo))
-      (-> this
-          (assoc :repo repo)
-          (assoc :watcher
-                 (watch-dir (fn [_]
-                              (when-not bare?
-                                (reset! uncommitted
-                                        (uncommitted-state dir)))
-                              (reset! refs (ref-states repo)))
-                            dir)))))
+      (letfn [(reload-states []
+                (let [states (if-not bare?
+                               {"UNCOMMITTED" (uncommitted-state dir)}
+                               {})]
+                  (reset! states-map (into states
+                                           (map #(vector (:name %) %))
+                                           (ref-states repo)))))]
+        (reload-states)
+        (-> this
+            (assoc :repo repo)
+            (assoc :watcher (watch-dir (fn [_] (reload-states)) dir))))))
 
   (stop [this]
     (when watcher
@@ -121,5 +116,4 @@
   (map->Custard {:dir (fs/file path)
                  :repo nil
                  :watcher nil
-                 :refs (atom [])
-                 :uncommitted (atom nil)}))
+                 :states-map (atom {})}))
