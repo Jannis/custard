@@ -42,7 +42,7 @@
   (println "send-to-remote" (:remote queries))
   (put! ch-pending-queries {:queries queries :merge-fn merge-fn}))
 
-;;;; Receive push updates from the server
+;;;; Queue queries while backend is down, flush whenever possible
 
 (defn start-flushing-pending-queries! [reconciler]
   (go
@@ -57,6 +57,8 @@
           (println "Remote: waiting for connection")
           (<! (timeout 500))))
       (recur))))
+
+;;;; Receive push updates from the server
 
 (defn refetch-root-query [reconciler]
   (let [app (om/app-root reconciler)
