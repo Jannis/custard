@@ -33,8 +33,15 @@
                                        state' path])]
                 (str "[" title "](" url " \"" path "\")")))}])
 
+(defn tag-extension [converter]
+  #js [#js {:type "lang"
+            :regex "(\\+[a-zA-Z0-9-_\\/:]+)"
+            :replace
+            (fn [s name]
+              (str "<span class=\"inline-tag\">" name "</span>"))}])
+
 (def converter
-  (let [extensions #js [uml-extension file-extension]]
+  (let [extensions #js [uml-extension file-extension tag-extension]]
     (js/Showdown.converter. #js {:extensions extensions})))
 
 (defui Markdown
