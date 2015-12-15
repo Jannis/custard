@@ -39,7 +39,7 @@
     (ffirst (filter #(some #{kind} (second %)) kind-aliases))))
 
 (defn parse-markdown-data [data]
-  (let [text (or (data "description") (data "text") "")
+  (let [text (or (data "description") (data "content") "")
         lines (str/split-lines text)
         title-pattern #"#\s+(([a-z]+):\s*)?(.*)"
         tag-pattern #"\+([a-zA-Z0-9-_\/:]+)"]
@@ -74,7 +74,7 @@
      :description (if (:title markdown-data)
                     (:text markdown-data)
                     (or (data "description")
-                        (data "text")))
+                        (data "content")))
      :mapped-here (mapv #(hash-map :name %) (data "mapped-here"))
      :tags (into []
              (concat (mapv #(hash-map :name %) (data "tags"))
