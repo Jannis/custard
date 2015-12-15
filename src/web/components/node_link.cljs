@@ -34,7 +34,7 @@
     [:node (:name props)])
   static om/IQuery
   (query [this]
-    [:name :title :kind])
+    [:name :title :kind :marker])
   Object
   (render [this]
     (let [{:keys [name title kind]} (om/props this)

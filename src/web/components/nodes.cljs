@@ -1,5 +1,6 @@
 (ns web.components.nodes
-  (:require [om.next :as om :refer-macros [defui]]
+  (:require [clojure.string :as str]
+            [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [web.components.markdown :refer [markdown]]
             [web.components.node-link :refer [NodeLink node-link
@@ -23,7 +24,7 @@
     [:node (:name props)])
   static om/IQuery
   (query [this]
-    [:name :title :kind :description
+    [:name :title :kind :description :marker
      {:parent (om/get-query NodeLink)}
      {:children '...}
      {:mapped-here (om/get-query NodeLink)}
@@ -49,6 +50,10 @@
         "work-item" (not (empty? mapped-here))
         "tag" true)))
 
+  (markers [this]
+    (let [{:keys [tags]} (om/props this)]
+      (into [] (distinct (keep identity (map :marker tags))))))
+
   (render-detail [this label content]
     (dom/div #js {:className "node-detail"}
       (dom/div #js {:className "node-detail-label"} label)
@@ -69,7 +74,9 @@
         (dom/h2 #js {:className "node-header"}
           (dom/span #js {:className "node-header-title"
                          :onClick #(.toggle-expanded this)}
-            title)
+            (str title " ")
+            (dom/span #js {:className "node-header-title-markers"}
+              (str/join " " (.markers this))))
           (dom/a #js {:className "node-header-name"
                       :onClick #(.set-permalink this)}
             name))

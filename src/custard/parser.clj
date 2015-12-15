@@ -71,6 +71,7 @@
   (let [markdown-data (parse-markdown-data data)]
     {:title (or (data "title") (:title markdown-data))
      :kind (or (parse-kind data) (:kind markdown-data))
+     :marker (data "marker")
      :description (if (:title markdown-data)
                     (:text markdown-data)
                     (or (data "description")
