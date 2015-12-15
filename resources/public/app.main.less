@@ -205,6 +205,27 @@ main {
         font-family: 'Fira Sans Light';
         display: table-cell;
         vertical-align: top;
+
+        .markdown {
+          h1, h2, h3, h4 {
+            font-family: 'Fira Sans';
+            font-weight: 300;
+          }
+
+          h1, h2 {
+            font-size: 1rem;
+            border-bottom: thin solid @detail-border-color;
+          }
+
+          h3 {
+            font-size: 1rem;
+          }
+
+          h4 {
+            font-size: 1rem;
+            opacity: 0.75;
+          }
+        }
       }
     }
   }
