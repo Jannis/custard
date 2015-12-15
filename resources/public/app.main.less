@@ -17,6 +17,10 @@
 @detail-bg: @white-dark;
 @detail-border-color: @black-lighter;
 
+@quote-fg: @detail-fg;
+@quote-bg: darken(@detail-bg, 5%);
+@quote-border-color: darken(@detail-bg, 15%);
+
 @border-radius: 0.5rem;
 
 body {
@@ -265,6 +269,28 @@ main {
 
   *:last-child {
     margin-bottom: 0;
+  }
+
+  blockquote {
+    position: relative;
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    color: @quote-fg;
+    background: @quote-bg;
+    border-left: medium solid @quote-border-color;
+    margin: 0;
+    overflow: none;
+    box-sizing: border-box;
+    z-index: 0;
+
+    &:before {
+      content: "\201D";
+      font-size: 3rem;
+      opacity: 0.2;
+      position: absolute;
+      left: 0.5rem;
+      top: 0.15rem;
+      z-layer: -1;
+    }
   }
 }
 
