@@ -31,6 +31,7 @@
 
   (render [this]
     (let [{:keys [state states]} (om/props this)]
+      (println "StateChooser: render" "state" (:name state))
       (dom/div #js {:className "state-chooser"}
         (dom/select #js {:value (:name state)
                          :onChange #(.state-selected this %)}
