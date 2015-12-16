@@ -49,4 +49,4 @@
                (dom/span #js {:className "node-link-title"} title)
                (dom/span #js {:className "node-link-name"} name))))))
 
-(def node-link (om/factory NodeLink {:key-fn :name}))
+(def node-link (om/factory NodeLink {:keyfn :name}))

@@ -26,4 +26,4 @@
             (dom/div #js {:className "project-copyright-text"}
               (markdown {:text copyright}))))))))
 
-(def project (om/factory Project {:key-fn :name}))
+(def project (om/factory Project {:keyfn :name}))
