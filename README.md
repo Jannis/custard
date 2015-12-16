@@ -4,20 +4,20 @@ An improved version of the requirements, architecture and work planning
 tool [MUSTARD](http://github.com/CodethinkLabs/mustard) implemented
 in Clojure.
 
-## Introduction
+## 1 Introduction
 
 TODO
 
-### Benefits
+### 1.1 Benefits
 
 * Developer-friendly - all it takes is a Git repository and a text editor
 * Standard code review workflows can be used for plans made with Custard
 * Bring external documents (whitepapers, specs, emails...) into version
   control
 
-### Running Custard
+## 2 Running Custard
 
-#### Running Custard from source
+### 2.1 Running Custard from source
 
 **Create a Custard repository**
 
@@ -50,7 +50,7 @@ CUSTARD_PATH=~/you-project boot run-production
 Then point your browser to http://localhost:3000 and you should
 be good to go!
 
-#### Serious deployment
+### 2.2 Serious deployment
 
 To obtain an uberjar for deployment, simply run
 ```
@@ -80,7 +80,7 @@ Since it is written into the generated client JavaScript, the
 `BACKEND_URL` can only be set at build-time. `APP_PORT` and
 `BACKEND_PORT` can be set at runtime, just like `CUSTARD_PATH`.
 
-## License
+## 3. License
 
 Copyright (C) 2015 Jannis Pohlmann.
 
