@@ -36,6 +36,10 @@
     {:value (db->tree-cached query (get st key) st)
      :remote (or force-remotes? (go-remote? st params))}))
 
+(defmethod read :node
+  [{:keys [query query-root state]} _ _]
+  {:value (om/db->tree query query-root @state)})
+
 (defmethod read :custard/ready?
   [{:keys [state]} key _]
   {:value (boolean (get @state key))})
@@ -80,6 +84,7 @@
 (def reconciler
   (om/reconciler {:parser parser
                   :state initial-state
+                  :pathopt true
                   :merge-tree merge-result-tree
                   :send remote/send-to-remote
                   :id-key :id}))
