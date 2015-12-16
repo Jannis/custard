@@ -85,10 +85,12 @@
                            (if expanded
                              " node-details-expanded"
                              " node-details-collapsed"))}
+          (when description
+            (let [text {:text description}]
+              (dom/div #js {:className "node-description"}
+                (dom/h3 nil "Description")
+                (markdown text))))
           (dom/div #js {:className "node-details-table"}
-            (when description
-              (let [text {:text description}]
-                (.render-detail this "Description" (markdown text))))
             (when parent
               (.render-detail this "Parent" (node-link parent)))
             (when (some #{kind} ["component" "work-item"])

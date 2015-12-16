@@ -192,6 +192,44 @@ main {
     border-right: 0;
   }
 
+  .node-description {
+    box-sizing: border-box;
+    padding: 1rem;
+    color: @detail-fg;
+    background: @detail-bg;
+    border: thin solid @detail-border-color;
+    margin-bottom: -1px;
+    font-family: 'Fira Sans';
+    font-weight: 300;
+
+    > h3 {
+      font-weight: 400;
+      font-size: 1rem;
+      margin: 0 0 1rem 0;
+      border-bottom: thin solid @detail-border-color;
+    }
+
+    .markdown {
+      h1, h2, h3, h4 {
+        font-family: 'Fira Sans';
+        font-weight: 400;
+      }
+
+      h1, h2 {
+        font-size: 1rem;
+      }
+
+      h3 {
+        font-size: 1rem;
+      }
+
+      h4 {
+        font-size: 1rem;
+        opacity: 0.75;
+      }
+    }
+  }
+
   .node-details-table {
     display: table;
     box-sizing: border-box;
@@ -214,30 +252,10 @@ main {
       }
 
       .node-detail-content {
-        font-family: 'Fira Sans Light';
+        font-family: 'Fira Sans';
+        font-weight: 300;
         display: table-cell;
         vertical-align: top;
-
-        .markdown {
-          h1, h2, h3, h4 {
-            font-family: 'Fira Sans';
-            font-weight: 300;
-          }
-
-          h1, h2 {
-            font-size: 1rem;
-            border-bottom: thin solid @detail-border-color;
-          }
-
-          h3 {
-            font-size: 1rem;
-          }
-
-          h4 {
-            font-size: 1rem;
-            opacity: 0.75;
-          }
-        }
       }
     }
   }
@@ -249,7 +267,8 @@ main {
 
 .project-description {
   margin-top: 2rem;
-  font-family: 'Fira Sans Light';
+  font-family: 'Fira Sans';
+  font-weight: 300;
 }
 
 .project-copyright {
@@ -262,7 +281,8 @@ main {
   }
 
   .project-copyright-text {
-    font-family: 'Fira Sans Light';
+    font-family: 'Fira Sans';
+    font-weight: 300;
   }
 }
 
