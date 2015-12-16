@@ -76,10 +76,10 @@
   ((:ring-ajax-post (:sente system)) req))
 
 (defroutes backend-routes
-  (GET  "/query"             req          (ajax-get-or-ws-handshake req))
-  (POST "/query"             req          (ajax-post req))
-  (GET  "/uml/:data"         [data]       (handle-uml data))
-  (GET  "/file/:state/:path" [state path] (handle-file state path))
+  (GET  "/query" req (ajax-get-or-ws-handshake req))
+  (POST "/query" req (ajax-post req))
+  (GET  "/uml/:data" [data] (handle-uml data))
+  (GET  "/file/:state/:path{.*}" [state path] (handle-file state path))
 
   (route/not-found "Not found"))
 
