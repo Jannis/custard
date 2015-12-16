@@ -71,7 +71,6 @@
   (let [markdown-data (parse-markdown-data data)]
     {:title (or (data "title") (:title markdown-data))
      :kind (or (parse-kind data) (:kind markdown-data))
-     :marker (data "marker")
      :description (if (:title markdown-data)
                     (:text markdown-data)
                     (or (data "description")
@@ -82,7 +81,10 @@
                      (mapv #(hash-map :name %) (:tags markdown-data))))}))
 
 (defn parse-project [data]
-  {:copyright (data "copyright")})
+  {:copyright (data "copyright")
+   :sort-by (let [possible-values ["title" "location" "name"]
+                  value (or (data "sort-by") "location")]
+              (if (some #{value} possible-values) value "location"))})
 
 (defn parse-requirement [data]
   {})
@@ -94,7 +96,7 @@
   {})
 
 (defn parse-tag [data]
-  {})
+  {:marker (data "marker")})
 
 (def kind-parsers
   {"project" parse-project
