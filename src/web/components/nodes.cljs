@@ -85,7 +85,7 @@
                            (if expanded
                              " node-details-expanded"
                              " node-details-collapsed"))}
-          (when description
+          (when (not (empty? description))
             (let [text {:text description}]
               (dom/div #js {:className "node-description"}
                 (dom/h3 nil "Description")
