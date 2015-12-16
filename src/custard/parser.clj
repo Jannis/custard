@@ -215,7 +215,7 @@
 
 (defn parse-yaml [data]
   (try
-    (yaml/parse-string data false)
+    (yaml/parse-string data :keywords false)
     (catch Exception e
       {:error (str e)})))
 

@@ -26,7 +26,7 @@
                  [gitiom "0.1.1"]
                  [juxt/dirwatch "0.2.2"]
                  [me.raynes/fs "1.4.6"]
-                 [org.clojars.mpenet/clj-yaml "0.3.4"]
+                 [circleci/clj-yaml "0.5.5"]
 
                  ;; Server
                  [com.cognitect/transit-clj "0.8.285"]
@@ -38,7 +38,7 @@
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/tools.reader "1.0.0-alpha1"]
                  [org.danielsz/system "0.1.9"]
-                 [ring-middleware-format "0.6.0"]
+                 [ring-middleware-format "0.7.0"]
 
                  ;; Web app
                  [bidi "1.23.1"]
