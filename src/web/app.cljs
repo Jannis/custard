@@ -55,7 +55,7 @@
 
   (render [this]
     (dom/div #js {:className "app"}
-      (let [header-props [:custard/state :custard/states :View]]
+      (let [header-props [:custard/state :custard/states :view]]
         (header
           (om/computed (select-keys (om/props this) header-props)
                        {:select-state-fn #(.select-state this %)
