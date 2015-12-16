@@ -9,7 +9,7 @@
     [:node (:name props)])
   static om/IQuery
   (query [this]
-    [:name :title :description :copyright])
+    [:name :title :description :copyright :sort-by])
   Object
   (render [this]
     (let [{:keys [name title description

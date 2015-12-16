@@ -7,14 +7,20 @@
                                               node->route]]
             [web.routing :as routing]))
 
-(defn sort-nodes [nodes]
+(defn sort-nodes-by [nodes sort-by-fns]
   (letfn [(kind-index [node]
             (.indexOf #js ["requirement"
                            "component"
                            "work-item"
                            "tag"]
                       (:kind node)))]
-    (sort-by (juxt kind-index :title) nodes)))
+    (sort-by (apply juxt (concat [kind-index] sort-by-fns)) nodes)))
+
+(defn sort-nodes [nodes sort-by]
+  (case sort-by
+    "location" nodes
+    "title" (sort-nodes-by nodes [:title :name])
+    "name" (sort-nodes-by nodes [:name :title])))
 
 (declare node)
 
@@ -63,7 +69,7 @@
     (let [{:keys [name title kind description children
                   mapped-to mapped-here tags tagged
                   ui/expanded]} (om/props this)
-          {:keys [parent]} (om/get-computed this)]
+          {:keys [parent sort-by]} (om/get-computed this)]
       (dom/div #js {:className
                     (str "node"
                          (when-not parent
@@ -101,7 +107,7 @@
                       "No requirements have been mapped here yet."
                       (str "No requirements or components have been "
                            "mapped here yet.")))
-                  (map node-link (sort-nodes mapped-here)))))
+                  (map node-link (sort-nodes mapped-here "title")))))
             (when (some #{kind} ["requirement" "component"])
               (.render-detail this "Mapped to"
                 (if (empty? mapped-to)
@@ -110,27 +116,30 @@
                       (str "Not mapped to any components or "
                            "work items yet.")
                       (str "Not mapped to any work items yet.")))
-                  (map node-link (sort-nodes mapped-to)))))
+                  (map node-link (sort-nodes mapped-to "title")))))
             (when-not (or (= "tag" kind) (empty? tags))
-              (.render-detail this "Tags" (mapv node-link tags)))
+              (.render-detail this "Tags"
+                (mapv node-link (sort-nodes tags "title"))))
             (when (= "tag" kind)
               (.render-detail this "Tagged"
                 (if (empty? tagged)
                   "Nothing has been tagged with this yet."
-                  (map node-link (sort-nodes tagged)))))))
+                  (map node-link (sort-nodes tagged "title")))))))
         (dom/div #js {:className "node-subnodes"}
-          (for [child (sort-nodes children)]
+          (for [child (sort-nodes children sort-by)]
             (node
-              (om/computed child {:parent (om/props this)}))))))))
+             (om/computed child {:parent (om/props this)
+                                 :sort-by sort-by}))))))))
 
-(def node (om/factory Node {:key-fn :name}))
+(def node (om/factory Node {:keyfn :name}))
 
 (defui Nodes
   Object
   (render [this]
-    (let [nodes (:nodes (om/props this))]
+    (let [{:keys [nodes sort-by]} (om/props this)]
       (dom/div #js {:className "nodes"}
-        (for [node' (filter #(nil? (:parent %)) nodes)]
-          (node node'))))))
+        (for [node' (filter #(nil? (:parent %))
+                            (sort-nodes nodes sort-by))]
+          (node (om/computed node' {:sort-by sort-by})))))))
 
 (def nodes (om/factory Nodes))
