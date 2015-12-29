@@ -33,25 +33,22 @@
       (routing/activate-route! view {:state (:name state)})))
 
   (componentWillUpdate [this new-props new-state]
-    (let [state (:state (om/get-params this))
-          states (:custard/states new-props)]
+    (let [{:keys [custard/state custard/states]} new-props]
       (println "App: will update:"
-               "state?" (not (nil? state))
+               "state?" (not (empty? state))
                "states?" (not (empty? states)))
-      (when (not (empty? states))
+      (if (and (not (empty? states))
+               (empty? state))
         (let [names (map :name states)
               find-state (fn [name] (first (filter #(= name %) names)))
-              requested-state (find-state (second state))
               head (find-state "HEAD")
-              master (find-state "refs/heads/master")]
-          (println "App: will update: desired state" state)
-          (println "App: will update:   found:" requested-state)
-          (when (nil? requested-state)
-            (println "App: will update: falling back to HEAD or master")
-            (cond
-              head (.select-state this [:state "HEAD"])
-              master (.select-state this [:state "refs/heads/master"])
-              :else (.select-state this [:state (:name (first states))])))))))
+              master (find-state "refs/heads/master")
+              first-state (:name (first states))]
+          (println "App: will update: falling back to HEAD or master")
+          (cond
+            head (.select-state this [:state "HEAD"])
+            master (.select-state this [:state "refs/heads/master"])
+            :else (.select-state this [:state first-state]))))))
 
   (render [this]
     (dom/div #js {:className "app"}

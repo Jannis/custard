@@ -1,5 +1,7 @@
 (ns custard.core
   (:require [com.stuartsierra.component :as component]
+            [gitiom.coerce :refer [to-oid]]
+            [gitiom.commit :as git-commit]
             [gitiom.reference :as git-ref]
             [gitiom.repo :as git-repo]
             [juxt.dirwatch :refer [watch-dir close-watcher]]
@@ -63,6 +65,18 @@
                :graph (parse-uncommitted dir)
                :load-file-fn #(load-file-from-dir dir %)}))
 
+;;;; Commit state
+
+(defn commit-state [repo sha1]
+  (println "commit-state" sha1)
+  (let [commit (git-commit/load repo (to-oid repo sha1))]
+    (map->State {:name sha1
+                 :revision sha1
+                 :type :commit
+                 :graph (parse-commit repo commit)
+                 :load-file-fn
+                 #(load-file-from-commit repo commit %)})))
+
 ;;;; Branch and tag states
 
 (defn ref-states [repo]
@@ -86,7 +100,10 @@
     (into [] (vals @states-map)))
 
   (state [this name]
-    (@states-map name))
+    (let [m @states-map]
+      (if (contains? m name)
+        (m name)
+        (commit-state repo name))))
 
   component/Lifecycle
   (start [this]
