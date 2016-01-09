@@ -64,8 +64,11 @@
             (state (om/computed custard-state {:view view}))
             (dom/div nil "Loading...")))))))
 
-(defn run []
+(defn start []
   (enable-console-print!)
   (om/add-root! reconciler App (gdom/getElement "app"))
   (routing/start!)
   (remote/connect! reconciler))
+
+(defn reload []
+  (om/add-root! reconciler App (gdom/getElement "app")))

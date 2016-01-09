@@ -72,7 +72,8 @@
                         "files.clj"
                         "handler.clj"
                         "parser.clj"])
-        (reload :on-jsload 'web.app/run)
+        (reload :on-jsload 'web.app/reload
+                :asset-path "public")
         (cljs-repl)
         (less)
         (cljs :source-map true
