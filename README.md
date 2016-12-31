@@ -82,7 +82,7 @@ Since it is written into the generated client JavaScript, the
 
 ## 3. License
 
-Copyright (C) 2015 Jannis Pohlmann.
+Copyright (C) 2016 Jannis Pohlmann.
 
 Licensed under GNU Affero General Public License 3.0.
 See the LICENSE file for details.
